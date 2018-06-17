@@ -1,75 +1,77 @@
 package com.cpjd.models;
 
+import lombok.Data;
+import net.dv8tion.jda.core.entities.User;
+
+@Data
 public class Player {
 
-    private String discordID;
+    public double bank;
+    public double gameBank;
 
-    private Card one, two;
+    public double wager;
 
-    private double bank;
+    public User user;
+    public boolean isFolded;
+    public boolean isAllIn;
 
-    // stores if this player has folded yet
-    private boolean folded;
-
-    // stores the player's current bet
-    private double wager;
-
-    public Player(String discordID) {
-        this.discordID = discordID;
-        bank = 0;
+    public Player(User user, double bank) {
+        this.user = user;
+        this.bank = bank;
     }
 
-    // Resets variables for a NEW ROUND
-    public void reset() {
-        folded = false;
-        wager = 0;
+    public void add(double amount) {
+        this.gameBank += amount;
     }
 
-    public boolean isFolded() {
-        return folded;
-    }
+    public boolean wager(double wager) {
+        if(gameBank - wager < 0) return false;
+        if(wager >= gameBank) {
+            this.wager = gameBank;
+            isAllIn = true;
+            return true;
+        }
 
-    public void setFolded(boolean folded) {
-        this.folded = folded;
-    }
-
-    public double getWager() {
-        return wager;
-    }
-
-    public void setWager(double wager) {
         this.wager = wager;
+
+        return true;
     }
 
-    public String getDiscordID() {
-        return discordID;
+    public void transfer(double amount) {
+        if(amount > gameBank) {
+            gameBank = 0;
+            add(gameBank);
+        }
+        else {
+            gameBank -= amount;
+            add(amount);
+        }
     }
 
-    public void setDiscordID(String discordID) {
-        this.discordID = discordID;
+
+    public boolean sub(double amount) {
+        if(gameBank - amount < 0) return false;
+        gameBank -= amount;
+        return true;
     }
 
-    public Card getOne() {
-        return one;
-    }
-
-    public void setOne(Card one) {
-        this.one = one;
-    }
-
-    public Card getTwo() {
-        return two;
-    }
-
-    public void setTwo(Card two) {
-        this.two = two;
-    }
 
     public double getBank() {
-        return bank;
+        return round(bank, 2);
     }
 
-    public void setBank(double bank) {
-        this.bank = bank;
+    public double getGameBank() {
+        return round(gameBank, 2);
+    }
+
+    /**
+     * Rounds a decimal to the specified number of digits (right of decimal point)
+     * @param value the value to round
+     * @param precision the amount of digits to keep
+     * @return rounded double
+     */
+    public static double round(double value, int precision) {
+        int scale = (int) Math.pow(10, precision);
+        return (double) Math.round(value * scale) / scale;
     }
 }

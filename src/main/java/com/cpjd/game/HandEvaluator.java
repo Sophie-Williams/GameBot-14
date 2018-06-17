@@ -1,4 +1,4 @@
-package com.cpjd.evaluate;
+package com.cpjd.game;
 
 import com.cpjd.models.Card;
 import com.cpjd.models.Player;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 public class HandEvaluator {
 
     /*
-     * This will evaluate who one a round. The ArrayList of players is everyone in the round,
+     * This will game who won a round. The ArrayList of players is everyone in the round,
      * and their cards can be got by players.get(0).getOne() or getTwo(). The cards array is
      * the house's 5 cards on the table (might be less)
      *
