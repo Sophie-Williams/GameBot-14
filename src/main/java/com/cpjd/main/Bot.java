@@ -39,6 +39,14 @@ public class Bot extends ListenerAdapter {
 
         if(cardDirectory.exists()) {
             System.out.println("Card directory loaded.");
+
+            // Clear old files
+            File[] temp = cardDirectory.listFiles();
+            for(File f : temp) {
+                if(!f.getName().contains("temp")) continue;
+                f.delete();
+            }
+
         } else {
             System.err.println("Card directory not found. Exiting...");
             return;
@@ -54,14 +62,21 @@ public class Bot extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if(!event.getTextChannel().getName().equalsIgnoreCase("poker")) return;
+        try {
+            if(event.getAuthor().isBot() || !event.getTextChannel().getName().equalsIgnoreCase("poker")) return;
 
-        event.getMessage().delete().queue(); // delete the message to keep the channel clean
-
-        for(Module m : modules) {
-            if(m.commandReceived(event.getMember(), event.getMessage().getRawContent())) {
-                return;
+            for(Module m : modules) {
+                if(m.commandReceived(event.getMember(), event.getMessage().getRawContent())) {
+                    return;
+                }
             }
+
+           // event.getMessage().delete().queue(); // delete the message to keep the channel clean
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error");
         }
+
     }
 }

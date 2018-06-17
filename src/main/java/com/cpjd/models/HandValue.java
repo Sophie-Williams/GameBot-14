@@ -1,6 +1,5 @@
-package com.cpjd.modules;
+package com.cpjd.models;
 
-import com.cpjd.models.Card;
 import lombok.Data;
 import lombok.Getter;
 

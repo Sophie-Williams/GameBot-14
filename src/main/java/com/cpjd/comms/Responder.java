@@ -35,6 +35,9 @@ public class Responder {
 
     public void dmHands() {
         for(Player p : players) {
+            System.out.println(p.getCard1().toString());
+            System.out.println(p.getCard2().toString());
+
             Message message = new MessageBuilder().append("Your hand is: ").build();
 
             File hand = Card.combine(p.getCard1(), p.getCard2());

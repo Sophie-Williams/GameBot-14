@@ -11,7 +11,7 @@ public class RoleAuth {
      * @param user the user to authenticate
      * @return true if the user has elevated privledges
      */
-    public static boolean hasElevatedPrivledges(Member user) {
+    public static boolean hasElevatedPrivileges(Member user) {
         return user.getNickname().equals("Will") || user.isOwner();
     }
 

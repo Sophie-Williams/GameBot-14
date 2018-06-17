@@ -1,6 +1,7 @@
 package com.cpjd.utils;
 
 import com.cpjd.models.Card;
+import com.cpjd.models.HandValue;
 import com.cpjd.models.Player;
 
 import java.util.ArrayList;
@@ -55,8 +56,59 @@ public class HandEvaluator {
         return null;
     }
 
+    private HandValue computeValue(ArrayList<Card> cards) {
+        return new HandValue();
+    }
+
     private ArrayList<ArrayList<Card>> getCombinations(Player p) {
-        return null;
+        // Output array
+        ArrayList<ArrayList<Card>> possibleHands = new ArrayList<>();
+
+        // Create a new ArrayList of all cards
+        ArrayList<Card> total = new ArrayList<>(drawn);
+        total.add(p.getCard1());
+        total.add(p.getCard2());
+
+        // Only one possible array
+        if(total.size() == 5) {
+            possibleHands.add(total);
+            return possibleHands;
+        }
+
+        // Each hand will only leave out one card, so
+        // array processing is pretty easy
+        else if(total.size() == 6) {
+
+            // Skip whatever card skip is at
+            for(int skip = 0; skip < total.size(); skip++) {
+                ArrayList<Card> possible = new ArrayList<>();
+
+                for(int i = 0; i < total.size(); i++) {
+                    if(i == skip) continue;
+
+                    possible.add(total.get(i));
+                }
+
+                possibleHands.add(possible);
+            }
+        }
+
+        // Each hand will leave 2 cards out, these means,
+        // Every card needs to be left out twice total
+        else if(total.size() == 7) {
+            for(int skip = 0; skip < total.size(); skip++) {
+                ArrayList<Card> possible = new ArrayList<>();
+
+                for(int i = 0; i < total.size(); i++) {
+                    if(i == skip || (i == skip + 1 || (skip == total.size() && i == 0))) continue;
+
+                    possible.add(total.get(i));
+                }
+
+                possibleHands.add(possible);
+            }
+        }
+        return possibleHands;
     }
 
 }

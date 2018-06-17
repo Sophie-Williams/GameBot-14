@@ -1,7 +1,7 @@
 package com.cpjd.models;
 
 import com.cpjd.main.Bot;
-import com.cpjd.utils.RandomOrgSeededRandomGenerator;
+import com.cpjd.utils.RandomORG;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -11,6 +11,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Random;
 
 @Data
 @AllArgsConstructor
@@ -54,16 +55,22 @@ public class Card {
             deck.add(new Card(SUIT.DIAMONDS, number));
         }
 
-        Collections.shuffle(deck, new RandomOrgSeededRandomGenerator().getRandom());
-        Collections.shuffle(deck, new RandomOrgSeededRandomGenerator().getRandom());
-        Collections.shuffle(deck, new RandomOrgSeededRandomGenerator().getRandom());
-        Collections.shuffle(deck, new RandomOrgSeededRandomGenerator().getRandom());
-        Collections.shuffle(deck, new RandomOrgSeededRandomGenerator().getRandom());
-        Collections.shuffle(deck, new RandomOrgSeededRandomGenerator().getRandom());
-        Collections.shuffle(deck, new RandomOrgSeededRandomGenerator().getRandom());
+
+        try {
+            int[] nums = RandomORG.doRequest();
+            for(int i = 0; i < 7; i++) {
+                Collections.shuffle(deck, new Random(nums[0]));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Failed to shuffle good.");
+            Collections.shuffle(deck);
+        }
 
         return deck;
     }
+
+    private static int count = 0;
 
     /**
      * Combines several cards into one png image
@@ -72,7 +79,9 @@ public class Card {
      */
     public static File combine(Card ... cards) {
         try {
-            File combined = new File(Bot.CARD_DIRECTORY+File.separator+"combinedTemp.png");
+            count++;
+
+            File combined = new File(Bot.CARD_DIRECTORY+File.separator+count+"temp.png");
 
             if(!combined.exists()) {
                 if(combined.createNewFile()) System.out.println("Creating temporary combined image file.");

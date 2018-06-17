@@ -4,7 +4,6 @@ import com.cpjd.comms.Responder;
 import com.cpjd.main.RoleAuth;
 import com.cpjd.models.Card;
 import com.cpjd.models.Player;
-import com.cpjd.utils.HandEvaluator;
 import com.cpjd.utils.SaveFile;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
@@ -12,6 +11,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * The game module handles the "Texas Hold-em" game and its related flow and commands.
@@ -28,10 +28,11 @@ public class Game extends Module {
     private ArrayList<Player> players = new ArrayList<>();
     private ArrayList<Card> deck;
     private ArrayList<Card> drawn = new ArrayList<>();
-    private int firstRoundPlayer = 0;
+    private int firstTurnIndex = 0;
     private int turn = 0;
     private double pot;
     private double bet;
+    private int elapsedTurns;
     private SaveFile save;
 
     public Game(TextChannel poker) {
@@ -45,7 +46,7 @@ public class Game extends Module {
         /*
          * Manage game state
          */
-        if(RoleAuth.hasElevatedPrivledges(author)) {
+        if(RoleAuth.hasElevatedPrivileges(author)) {
             if(message.equals("open") && state == STATE.IDLE) {
                 state = STATE.OPEN;
                 responder.post("Game opened. Players may now join with \"join\"");
@@ -63,13 +64,14 @@ public class Game extends Module {
                 save.save(players);
                 players.clear();
                 turn = 0;
-                firstRoundPlayer = 0;
+                firstTurnIndex = 0;
                 pot = 0;
                 bet = 0;
                 return true;
-            } else if(message.startsWith("start") && players.size() > 0 && state == STATE.OPEN && message.contains("\\s+") && message.split("\\s+").length == 2) {
+            } else if(message.startsWith("start") && players.size() > 0 && state == STATE.OPEN && message.split("\\s+").length == 2) {
                 state = STATE.IN_PROGRESS;
                 responder.post("Game started, each player gets a $"+message.split("\\s+")[1]+" deposit");
+
 
                 double deposit;
 
@@ -103,6 +105,7 @@ public class Game extends Module {
             }
 
             // Add the player
+            players.add(new Player(author.getGuild().getMembersByNickname("Sam", true).get(0), 0));
             players.add(save.search(author));
             responder.post(author.getNickname()+" joined! "+players.size()+" in the game!");
             return true;
@@ -125,6 +128,8 @@ public class Game extends Module {
          * Manage player turns
          */
         if(players.get(turn).matchesMember(author) && state == STATE.IN_PROGRESS) {
+            System.out.println("here");
+
             if(message.startsWith("bet")) {
                 if(!message.contains("\\s+") || message.split("\\s+").length != 2) {
                     responder.post("Invalid syntax, please use bet <amount>.");
@@ -207,17 +212,18 @@ public class Game extends Module {
         bet = 0;
 
         deck = Card.deck();
-        firstRoundPlayer++;
+
         drawn.clear();
-        if(firstRoundPlayer == players.size()) firstRoundPlayer = 0;
-        turn = firstRoundPlayer;
+        elapsedTurns = 0;
 
         for(Player p : players) {
             // Deal players cards
-            p.dealHand(deck.remove(0), deck.remove(1));
+            p.dealHand(deck.remove(0), deck.remove(0));
             // Ante rules here TODO
             pot += p.withdraw(2);
         }
+
+        firstTurnIndex = new Random().nextInt(players.size());
 
         responder.dmHands(); // send the users their hands
 
@@ -230,13 +236,15 @@ public class Game extends Module {
     public void endRound() {
        // HandEvaulator.evaluate(players, drawn);
 
-        new HandEvaluator(pot).evaluate(players, drawn);
+        //new HandEvaluator(pot).evaluate(players, drawn);
 
         beginRound();
     }
 
     /**
      * Called at the beginning of each turn (before a player makes a move)
+     *
+     * This method sets up for the next turn
      */
     public void turn() {
         /*
@@ -253,13 +261,24 @@ public class Game extends Module {
         }
 
         responder.post(players.get(turn).getMember().getNickname()+"'s turn. The bet is at $"+round(bet)+".");
-        turn++;
-        if(turn == players.size()) {
-            turn = 0;
 
+        /*
+         * Check if cards should be drawn,
+         * 1) Everyone needs to have had at least one term
+         * 2) Everyone's wager amount needs to be >= highest bet
+         */
+        boolean wagersMeetMinimum = true;
+        for(Player p : players) {
+            if(p.getWager() < this.bet) {
+                wagersMeetMinimum = false;
+                break;
+            }
+        }
+
+        if(elapsedTurns >= players.size() && wagersMeetMinimum) {
             if(drawn.size() == 5) {
                 endRound();
-            } else if(deck.size() == 0) {
+            } else if(drawn.size() == 0) {
                 drawn.add(deck.remove(0));
                 drawn.add(deck.remove(0));
                 drawn.add(deck.remove(0));
@@ -268,10 +287,19 @@ public class Game extends Module {
                 drawn.add(deck.remove(0));
                 responder.postDrawn(drawn);
             }
+
+            firstTurnIndex++;
+            if(firstTurnIndex == players.size()) firstTurnIndex = 0;
+            elapsedTurns = 0;
+            turn = firstTurnIndex;
+            return;
         }
 
+        turn++;
+        if(turn == players.size()) turn = 0;
         // Decide if cards need to be drawn OR round needs to be ended TODO
 
+        elapsedTurns++;
     }
 
     /**
