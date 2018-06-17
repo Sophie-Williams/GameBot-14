@@ -1,8 +1,6 @@
 package com.cpjd.main;
 
 import com.cpjd.modules.Game;
-import com.cpjd.modules.General;
-import com.cpjd.modules.Module;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
@@ -17,12 +15,10 @@ public class Bot extends ListenerAdapter {
 
     public static String CARD_DIRECTORY;
 
-    private ArrayList<Module> modules;
+    private Game game;
 
     public Bot(Guild guild) {
-        modules = new ArrayList<>();
-        modules.add(new Game(guild.getTextChannelsByName("poker", true).get(0)));
-        modules.add(new General(guild.getTextChannelsByName("poker", true).get(0)));
+        game = new Game(guild.getTextChannelsByName("poker", true).get(0));
     }
 
     public static void main(String[] args) {
@@ -65,13 +61,9 @@ public class Bot extends ListenerAdapter {
         try {
             if(event.getAuthor().isBot() || !event.getTextChannel().getName().equalsIgnoreCase("poker")) return;
 
-            for(Module m : modules) {
-                if(m.commandReceived(event.getMember(), event.getMessage().getRawContent())) {
-                    return;
-                }
-            }
+            game.commandReceived(event.getMember(), event.getMessage().getRawContent());
 
-           // event.getMessage().delete().queue(); // delete the message to keep the channel clean
+             event.getMessage().delete().queue(); // delete the message to keep the channel clean
 
         } catch (Exception e) {
             e.printStackTrace();

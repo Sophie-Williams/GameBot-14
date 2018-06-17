@@ -1,73 +1,40 @@
-package com.cpjd.utils;
+package com.cpjd.poker;
 
 import com.cpjd.models.Card;
-import com.cpjd.models.HandValue;
 import com.cpjd.models.Player;
 
 import java.util.ArrayList;
 
 public class HandEvaluator {
 
-    private ArrayList<Player> players;
     private ArrayList<Card> drawn;
-    private double pot;
 
-    public HandEvaluator(ArrayList<Player> players, ArrayList<Card> drawn, double pot) {
-        this.pot =  pot;
-        this.players = players;
+    public HandEvaluator(ArrayList<Card> drawn) {
         this.drawn = drawn;
     }
 
     /**
-     * Evaluates a round of poker.
-     *
-     * The following are handled by this class:
-     * 1) Finding the winner(s) and distributing the pot
-     * 2) Removing the losers from the game
-     *
-     * @return a list of players who won the game, usually only 1 length
+     * Computes the value of the players best 5 cards including the drawn cards
+     * @param card1 the player's first card
+     * @param card2 the player's second card
+     * @return the value of the player's hand
      */
-    public ArrayList<Player> evaluate() {
-        /*
-         * Remove folded players from the game
-         */
-        for(int i = 0; i < players.size(); i++) {
-            if(players.get(i).isFolded()) {
-                players.remove(i);
-                i--;
-            }
-        }
-
-        if(players.size() == 1) return players;
-
-         /*
-          * Okay, now start processing. Texas Hold-Em is a 5 card game, meaning
-          * the user's value is determined by the best combination of 5 cards.
-          * Each combination needs to be thoroughly analyzed and assigned a HandValue,
-          * which is used to determine the winner.
-          *
-          * getCombinations() generates a list of all possible combinations of 5 cards.
-          * Keep in mind, the length of combinations will depend on the amount of card drawn.
-          */
-
-
-
-
-        return null;
+    public HandValue computePlayerValue(Card card1, Card card2) {
+        ArrayList<HandValue> potentialValues = new ArrayList<>();
     }
 
-    private HandValue computeValue(ArrayList<Card> cards) {
-        return new HandValue();
+    private HandValue computeHandValue(Card card1, Card card2) {
+
     }
 
-    private ArrayList<ArrayList<Card>> getCombinations(Player p) {
+    private ArrayList<ArrayList<Card>> getCombinations(Card card1, Card card2) {
         // Output array
         ArrayList<ArrayList<Card>> possibleHands = new ArrayList<>();
 
         // Create a new ArrayList of all cards
         ArrayList<Card> total = new ArrayList<>(drawn);
-        total.add(p.getCard1());
-        total.add(p.getCard2());
+        total.add(card1);
+        total.add(card2);
 
         // Only one possible array
         if(total.size() == 5) {
@@ -110,5 +77,4 @@ public class HandEvaluator {
         }
         return possibleHands;
     }
-
 }

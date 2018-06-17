@@ -1,38 +1,31 @@
 package com.cpjd.models;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.User;
 
+@Data
 public class Player {
 
     /*
      * Characteristics
      */
-    @Getter
+
     private Member member;
     // Winnings (gameBank) are added to bank after "end" is executed
-    @Setter
-    @Getter
+
+
     private double bank;
 
     /*
      * Game only
      */
-    @Getter
-    /**
-     * This will remove the player in {@link com.cpjd.utils.HandEvaulator}. The player
-     * isn't removed immediately in case they have a wager to process
-     */
+
     private boolean leaveRequested;
-    @Setter
     private double gameBank;
     private double wager;
-    @Getter
-    @Setter
+    private double cardCycleBet;
     private boolean folded;
-    @Getter
+
     private Card card1, card2;
 
     public Player(Member member, double bank) {
@@ -93,10 +86,19 @@ public class Player {
     public double wager(double amount) {
         if(folded) throw new RuntimeException("User attempted to wager while already folded.");
 
-        if(wager > gameBank) wager += gameBank;
-        else wager += amount;
+        if(wager > gameBank) {
+            wager += gameBank;
+            return gameBank;
+        }
+        else  {
+            wager += amount;
+            return amount;
+        }
+    }
 
-        return wager;
+    public void transfer() {
+        bank += gameBank;
+        gameBank = 0;
     }
 
     public void leave() {
@@ -126,7 +128,7 @@ public class Player {
 
     /*
      *
-     * Getters & Setters
+     * s & s
      *
      */
     public double getBank() {
