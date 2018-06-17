@@ -1,9 +1,7 @@
 package com.cpjd.comms;
 
 import com.cpjd.models.Card;
-import com.cpjd.models.NUMBER;
 import com.cpjd.models.Player;
-import com.cpjd.models.SUIT;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -11,29 +9,38 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import java.io.*;
 import java.util.ArrayList;
 
+/**
+ * Responder is used for any sort of feedback to the user(s)
+ *
+ * @author Will Davies
+ */
 public class Responder {
 
-    public ArrayList<Player> players;
+    private TextChannel poker;
+    private ArrayList<Player> players;
 
-    public Responder(ArrayList<Player> players) {
+    public Responder(TextChannel poker, ArrayList<Player> players) {
+        this.poker = poker;
         this.players = players;
+    }
+
+    public void post(String message) {
+        poker.sendMessage(message).queue();
+    }
+
+    public void postDrawn(ArrayList<Card> drawn) {
+        Message m = new MessageBuilder().append("Now the flop.").build();
+        poker.sendFile(Card.combine(drawn.toArray(new Card[0])), m).queue();
     }
 
     public void dmHands() {
         for(Player p : players) {
+            Message message = new MessageBuilder().append("Your hand is: ").build();
 
-            Message m = new MessageBuilder().append("Dab").build();
+            File hand = Card.combine(p.getCard1(), p.getCard2());
 
-
-            File file = new File("C:\\Users\\Will Davies\\Downloads\\cards\\2C.png");
-
-            System.out.println(file.getAbsolutePath()+","+file.getAbsoluteFile().exists());
-
-            //File f = new
-           // System.out.println(f.getAbsolutePath());
-
-            p.getUser().openPrivateChannel().queue((channel) ->
-                    channel.sendFile(new Card(SUIT.SPADES, NUMBER.ACE).toFile(), m).queue());
+            p.getMember().getUser().openPrivateChannel().queue((channel) ->
+                    channel.sendFile(hand, message).queue());
         }
     }
 

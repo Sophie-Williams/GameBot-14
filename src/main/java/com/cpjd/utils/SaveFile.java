@@ -2,6 +2,7 @@ package com.cpjd.utils;
 
 import com.cpjd.main.Bot;
 import com.cpjd.models.Player;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.User;
 
 import java.io.*;
@@ -46,7 +47,7 @@ public class SaveFile {
         ArrayList<String> toWrite = new ArrayList<>();
 
         for(Player p : players) {
-            toWrite.add(p.getUser().getId() + " ," + String.valueOf(p.getBank()));
+            toWrite.add(p.getMember().getUser().getId() + " ," + String.valueOf(p.getBank()));
         }
 
         try {
@@ -62,9 +63,9 @@ public class SaveFile {
 
     }
 
-    public Player load(User user) {
+    public Player search(Member user) {
         for(String s : lines) {
-            if(s.split(",")[0].equals(user.getId())) {
+            if(s.split(",")[0].equals(user.getUser().getId())) {
                 return new Player(user, Double.parseDouble(s.split(",")[1]));
             }
         }
