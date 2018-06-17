@@ -4,7 +4,7 @@ import com.cpjd.comms.Responder;
 import com.cpjd.main.RoleAuth;
 import com.cpjd.models.Card;
 import com.cpjd.models.Player;
-import com.cpjd.utils.HandEvaulator;
+import com.cpjd.utils.HandEvaluator;
 import com.cpjd.utils.SaveFile;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
@@ -228,7 +228,9 @@ public class Game extends Module {
      * Called at the end of each round
      */
     public void endRound() {
-        HandEvaulator.evaluate(players, drawn);
+       // HandEvaulator.evaluate(players, drawn);
+
+        new HandEvaluator(pot).evaluate(players, drawn);
 
         beginRound();
     }
@@ -237,6 +239,19 @@ public class Game extends Module {
      * Called at the beginning of each turn (before a player makes a move)
      */
     public void turn() {
+        /*
+         * Check if there is only one player who's not folded
+         */
+        int folded = 0;
+        for(Player p : players) {
+            if(p.isFolded()) folded++;
+        }
+
+        if(folded == 1) {
+            endRound();
+            return;
+        }
+
         responder.post(players.get(turn).getMember().getNickname()+"'s turn. The bet is at $"+round(bet)+".");
         turn++;
         if(turn == players.size()) {
