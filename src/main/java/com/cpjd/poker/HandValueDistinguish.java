@@ -10,8 +10,12 @@ public class HandValueDistinguish {
 
     // goal is to remove all hand values but the winner(s)
     public static void determineBest(ArrayList<HandValue> values) {
+        System.out.println("Input: "+values.size());
+
+        if(values.size() == 1) return;
+
         Collections.sort(values);
-        Collections.reverse(values);
+        Collections.reverse(values); // high categories first
 
         // Then, if a hand doesn't match the category above it, remove it
         for(int i = values.size() - 1; i > 0; i--) {
@@ -27,18 +31,23 @@ public class HandValueDistinguish {
                 values.remove(i);
             }
         }
+
+        System.out.println("Output: "+values.size());
     }
 
     // 0 for tie, 1 for value1 win, 2 for value2 win // todo improve
     private static int findWinner(HandValue value1, HandValue value2) {
-        if(match(value1, value2)) return 0;
+        if(match(value1, value2)) { // if hands match, it's a winner
+            return 0;
+        }
 
-        if((value1.getCards().size() == 5 && value2.getCards().size() == 5) && getHighestCard(value1.getCards(), 4) > getHighestCard(value2.getCards(), 4)) return 1;
-        else if((value1.getCards().size() >= 4 && value2.getCards().size() >= 4) && getHighestCard(value1.getCards(), 3) > getHighestCard(value2.getCards(), 3)) return 1;
-        else if((value1.getCards().size() >= 3 && value2.getCards().size() >= 3) && getHighestCard(value1.getCards(), 2) > getHighestCard(value2.getCards(), 2)) return 1;
-        else if((value1.getCards().size() >= 2 && value2.getCards().size() >= 2) && getHighestCard(value1.getCards(), 1) > getHighestCard(value2.getCards(), 1)) return 1;
-        else if((value1.getCards().size() >= 1 && value2.getCards().size() >= 1) && getHighestCard(value1.getCards(), 0) > getHighestCard(value2.getCards(), 0)) return 1;
-        else return 2;
+        // otherwise, return the highest card
+        for(int i = 4; i >= 0; i--) {
+            if(getCard(value1.getCards(), i) > getCard(value2.getCards(), i)) return 1;
+            else if(getCard(value1.getCards(), i) < getCard(value2.getCards(), i)) return 2;
+        }
+
+        return 2;
     }
 
     private static boolean match(HandValue value1, HandValue value2) {
@@ -52,8 +61,9 @@ public class HandValueDistinguish {
         return value1.getCategory() == value2.getCategory();
     }
 
-    private static int getHighestCard(ArrayList<Card> cards, int displacement) {
+    private static int getCard(ArrayList<Card> cards, int displacement) {
         Collections.sort(cards);
+
         return cards.get(displacement).getNumber().getNumerical();
     }
 

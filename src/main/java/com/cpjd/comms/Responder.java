@@ -2,10 +2,13 @@ package com.cpjd.comms;
 
 import com.cpjd.models.Card;
 import com.cpjd.models.Player;
+import lombok.Getter;
+import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 
+import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 
@@ -16,6 +19,7 @@ import java.util.ArrayList;
  */
 public class Responder {
 
+    @Getter
     private TextChannel poker;
     private ArrayList<Player> players;
 
@@ -29,18 +33,34 @@ public class Responder {
     }
 
     public void postDrawn(ArrayList<Card> drawn) {
-        Message m = new MessageBuilder().append("Now the flop.").build();
-        poker.sendFile(Card.combine(drawn.toArray(new Card[0])), m).queue();
+        post("Computing...");
+
+        String y = "Now the flop.";
+        if(drawn.size() != 3) y = "Next card.";
+
+        Message m = new MessageBuilder().append(y).build();
+        poker.sendFile(Card.combine(true, drawn.toArray(new Card[0])), m).queue();
+    }
+
+    public void begin(double ante, Player first) {
+        EmbedBuilder round = new EmbedBuilder();
+        round.setColor(Color.white);
+        round.setTitle("NEW ROUND");
+        poker.sendMessage(round.build()).queue();
+
+        EmbedBuilder builder = new EmbedBuilder();
+        builder.setColor(Color.orange);
+        builder.setTitle("Everyone antes $"+(int)ante+". Pot: $"+(int)(ante * players.size())+".");
+        poker.sendMessage(builder.build()).queue();
     }
 
     public void dmHands() {
+        Player will = players.get(0);
+
         for(Player p : players) {
-            System.out.println(p.getCard1().toString());
-            System.out.println(p.getCard2().toString());
+            Message message = new MessageBuilder().append(p.getMember().getNickname()).append(", your hand is: ").append(p.getCard1().toString()).append(", ").append(p.getCard2().toString()).append(".").build();
 
-            Message message = new MessageBuilder().append("Your hand is: ").build();
-
-            File hand = Card.combine(p.getCard1(), p.getCard2());
+            File hand = Card.combine(false, p.getCard1(), p.getCard2());
 
             p.getMember().getUser().openPrivateChannel().queue((channel) ->
                     channel.sendFile(hand, message).queue());

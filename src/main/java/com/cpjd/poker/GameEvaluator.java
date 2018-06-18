@@ -3,7 +3,9 @@ package com.cpjd.poker;
 import com.cpjd.comms.Responder;
 import com.cpjd.models.Card;
 import com.cpjd.models.Player;
+import net.dv8tion.jda.core.EmbedBuilder;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -32,7 +34,7 @@ public class GameEvaluator {
         // Firstly, check if everyone is folded
         int notFolded = 0;
         for(Player p : players) {
-            if(p.isFolded()) notFolded++;
+            if(!p.isFolded()) notFolded++;
         }
         if(notFolded == 1) {
             for(Player p : players) {
@@ -51,6 +53,9 @@ public class GameEvaluator {
             p.setValue(new HandEvaluator(drawn).computePlayerValue(p.getCard1(), p.getCard2()));
             p.getValue().setID(p.getMember());
             values.add(p.getValue());
+
+            //System.out.println(p.getCard1().toString()+", "+p.getCard2().toString());
+            System.out.println(p.getMember().getNickname()+","+p.getValue().getCategory());
         }
 
 
@@ -67,12 +72,29 @@ public class GameEvaluator {
             }
         }
 
-        winner(won);
+        winner(won, players);
     }
 
-    private void winner(ArrayList<Player> winners) {
+    private void winner(ArrayList<Player> winners, ArrayList<Player> allPlayers) {
+        for(Player p : allPlayers) {
+            if(!winners.contains(p)) {
+                p.setGameBank(p.getGameBank() - p.getWager());
+            }
+        }
+
         if(winners.size() == 1) {
-            responder.post(winners.get(0).getMember().getNickname()+" won the pot of $"+pot+"!!!!");
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.setColor(Color.magenta);
+            embed.addField(winners.get(0).getMember().getNickname()+" won the pot of $"+(int)pot+"!", "", false);
+
+            if(winners.size() > 1) {
+                // Display hand
+                for(Player p : winners) {
+                    embed.addField(p.getMember().getNickname(), p.getCard1().toString()+", "+p.getCard2().toString()+"\n"+p.getValue().getCategory(), true);
+                }
+            }
+
+            responder.getPoker().sendMessage(embed.build()).queue();
         } else {
             String players = "";
             for(Player p : winners) {
@@ -87,7 +109,7 @@ public class GameEvaluator {
     }
 
     private void winner(Player ... winners) {
-        winner(new ArrayList<>(Arrays.asList(winners)));
+        winner(new ArrayList<>(Arrays.asList(winners)), players);
     }
 
 

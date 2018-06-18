@@ -41,6 +41,10 @@ public class Card implements Comparable<Card> {
         return card;
     }
 
+    public String toString() {
+        return number.toString() + suit.toString();
+    }
+
     /**
      * Returns a deck of cards, shuffled randomly with truly random numbers.
      * @return A deck of 52 cards, shuffled 7 times according to atmospheric noise
@@ -77,7 +81,7 @@ public class Card implements Comparable<Card> {
      * @param cards a variable-length argument of pngs to add to the image
      * @return a file path to an image containing multiple card pngs
      */
-    public static File combine(Card ... cards) {
+    public static File combine(boolean full, Card ... cards) {
         try {
             count++;
 
@@ -87,7 +91,8 @@ public class Card implements Comparable<Card> {
                 if(combined.createNewFile()) System.out.println("Creating temporary combined image file.");
             }
 
-            BufferedImage image = new BufferedImage(691 * cards.length, 1056, BufferedImage.TYPE_INT_ARGB);
+
+            BufferedImage image = new BufferedImage(691 * (full ? 5 : cards.length), 1056, BufferedImage.TYPE_INT_ARGB);
             Graphics g = image.getGraphics();
 
             int index = 0;
@@ -95,6 +100,24 @@ public class Card implements Comparable<Card> {
                 BufferedImage io = ImageIO.read(c.toFile());
                 g.drawImage(io, index * 691, 0, null);
                 index++;
+            }
+
+            if(cards.length == 3) {
+                File back = new File(Bot.CARD_DIRECTORY+File.separator+"back.png");
+
+                BufferedImage io = ImageIO.read(back);
+                g.drawImage(io, 3 * 691, 0, null);
+
+                io = ImageIO.read(back);
+                g.drawImage(io, 4 * 691, 0, null);
+            }
+
+            if(cards.length == 4) {
+                File back = new File(Bot.CARD_DIRECTORY+File.separator+"back.png");
+
+                BufferedImage io = ImageIO.read(back);
+                g.drawImage(io, 4 * 691, 0, null);
+
             }
 
             ImageIO.write(image, "png", combined);

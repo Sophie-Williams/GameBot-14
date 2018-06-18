@@ -7,9 +7,11 @@ import com.cpjd.utils.SaveFile;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.managers.fields.Field;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * The game module handles the "Texas Hold-em" game and its related flow and commands.
@@ -65,8 +67,22 @@ public class Game {
                         p.deposit(deposit);
                     }
                     state = STATE.IN_PROGRESS;
-                    activeRound = new Round(responder, players);
+                    activeRound = new Round(responder, players, 0);
                     activeRound.begin();
+                    activeRound.setListener(newTurnLeader -> {
+
+                        // Remove bankrupt players
+                        for(int i = 0; i < players.size(); i++) {
+                            if(players.get(i).getGameBank() <= 0) {
+                                responder.post(players.get(i).getMember().getNickname()+" was removed because of poverty. Your ass broke!");
+                                players.remove(i);
+                                i--;
+                            }
+                        }
+
+                        activeRound = new Round(responder, players, newTurnLeader);
+                        activeRound.begin();
+                    });
                 } catch(Exception e) {
                     responder.post("An error occur while trying to start the game. Please use correct syntax: start <starting-bank>.");
                 }
@@ -77,8 +93,15 @@ public class Game {
          * Joining the game
          */
         if(message.equalsIgnoreCase("join") && state == STATE.OPEN) {
+            for(Player p1 : players) {
+                if(p1.matchesMember(author)) return;
+            }
+
             Player p = save.search(author);
             players.add(p);
+
+
+            //players.add(new Player(author.getGuild().getMembersByNickname("Sam", true).get(0), 0));
 
             responder.post(author.getNickname()+" joined the game. "+players.size()+" players in the game.");
         }
@@ -90,7 +113,7 @@ public class Game {
             if(message.equalsIgnoreCase("fold")) activeRound.turn().fold();
             else if(message.equalsIgnoreCase("all in")) activeRound.turn().allIn();
             else if(message.equalsIgnoreCase("check")) activeRound.turn().check();
-            else if(message.equalsIgnoreCase("match")) activeRound.turn().match();
+            else if(message.equalsIgnoreCase("match") || message.equalsIgnoreCase("call")) activeRound.turn().match();
             else if(message.startsWith("bet")) {
                 try {
                     activeRound.turn().bet(Double.parseDouble(message.split("\\s+")[1]));
@@ -116,10 +139,9 @@ public class Game {
         eb.setTitle("Texas Hold-Em Standings");
         eb.setColor(Color.BLUE);
         for(Player p : players) {
-            eb.addField(p.getMember().getNickname(), "Bank: $"+p.getGameBank()+(p.getWager() > 0 ? " Wager: $"+p.getWager() : ""), true);
+            eb.addField(p.getMember().getNickname(), "Bank: $"+(int)(p.getGameBank() - p.getWager())+(p.getWager() > 0 ? "\nWager: $"+(int)p.getWager() : ""), true);
         }
-        eb.addBlankField(true);
-        eb.addField("Pot", "$"+round(activeRound.getPot()), true);
+        if(activeRound.getPot() > 0) eb.addField("Pot", "$"+(int)round(activeRound.getPot()), true);
 
         poker.sendMessage(eb.build()).queue();
     }

@@ -5,7 +5,9 @@ import com.cpjd.models.Card;
 import com.cpjd.models.Player;
 import com.cpjd.poker.GameEvaluator;
 import lombok.Getter;
+import net.dv8tion.jda.core.EmbedBuilder;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -56,11 +58,22 @@ public class Round {
      */
     private int turnLeader;
 
-    public Round(Responder responder, ArrayList<Player> players) {
+    public interface RoundEndListener {
+        void roundEnded(int newTurnLeader);
+    }
+
+    private RoundEndListener listener;
+
+    public void setListener(RoundEndListener listener) {
+        this.listener = listener;
+    }
+
+    public Round(Responder responder, ArrayList<Player> players, int turnLeader) {
         this.responder = responder;
         this.players = players;
         this.drawn = new ArrayList<>();
         tp = new TurnProcessor();
+        this.turnLeader = turnLeader;
     }
 
     /**
@@ -81,7 +94,7 @@ public class Round {
             pot += p.withdraw(2);
         }
 
-        responder.post("Everyone antes $2.");
+        responder.begin(2, currentTurn);
 
         responder.dmHands();
 
@@ -94,6 +107,13 @@ public class Round {
      */
     public void end(boolean cancelRound) {
         if(!cancelRound) new GameEvaluator(responder, drawn, players, pot).evaluate();
+
+        if(!cancelRound) {
+            int newTurnLeader = turnLeader + 1;
+            if(turnLeader == players.size()) turnLeader = 0;
+            if(listener != null) listener.roundEnded(newTurnLeader);
+            listener = null;
+        }
     }
 
     private void nextBettingPhase() {
@@ -123,8 +143,6 @@ public class Round {
         }
 
         // Set the new turn leader
-        turnLeader++;
-        if(turnLeader == players.size()) turnLeader = 0;
         currentTurn = players.get(turnLeader);
 
         beginTurn();
@@ -149,7 +167,16 @@ public class Round {
             return;
         }
 
-        responder.post(currentTurn.getMember().getNickname()+"'s turn. The bet is at $"+bet+". The pot is at $"+pot+" Use `bet <amount>`, `match`, `fold`, `check`, or `all in`.");
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setColor(Color.blue);
+        embed.setTitle(currentTurn.getMember().getNickname()+"'s turn.");
+        //embed.addField("Use `bet <amount>`, `match`, `fold`, `check`, or `all in`.", "", false);
+        embed.addField("Bank", "$"+(int)(currentTurn.getGameBank() - currentTurn.getWager()), true);
+        //embed.addField("Min bet $","$"+(int)(bet - currentTurn.getCardCycleBet()), true);
+        //embed.addField("Pot", "$"+(int)pot, true);
+        embed.addField("Wagered ", "$"+(int)currentTurn.getWager(), true);
+        embed.addField("Call", "$"+(int)((bet - currentTurn.getCardCycleBet())), true);
+        responder.getPoker().sendMessage(embed.build()).queue();
     }
 
     public TurnProcessor turn() {
@@ -162,33 +189,59 @@ public class Round {
          * @param amount the amount to bet
          */
         public void bet(double amount) {
-            if(amount < bet - currentTurn.getWager()) {
-                responder.post("Your bet of $"+amount+" does not meet the minimum bet of $"+(bet - currentTurn.getWager())+".");
+            // Verify the player has enough money
+            if(currentTurn.getWager() + amount > currentTurn.getGameBank()) {
+                responder.post("You can't wager more money than you have.");
                 return;
             }
 
+            if(amount < bet -  currentTurn.getCardCycleBet()) {
+                responder.post("Your bet of $"+amount+" does not meet the minimum bet of $"+(bet - currentTurn.getCardCycleBet())+".");
+                return;
+            }
+
+            boolean raised = false;
+            double oldBet = bet;
+
             double wager = currentTurn.wager(amount);
-            if(wager > bet) bet = wager;
+            if(wager > bet) {
+                bet = wager;
+                raised = true;
+            }
             pot += wager;
 
             currentTurn.setCardCycleBet(currentTurn.getCardCycleBet() + wager);
 
-            if(wager != 0) responder.post(currentTurn.getMember().getNickname()+" bet $"+wager+".");
-            else responder.post(currentTurn.getMember().getNickname()+" checked.");
+            /*
+             * Send some feedback.
+             */
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.setColor(Color.orange);
+            if(wager != 0) {
+                //if(!raised || oldBet == 0)
+                    embed.setTitle(currentTurn.getMember().getNickname()+" bet $"+(int)wager+". Pot: $"+(int)pot+".");
+               // else if(amount - oldBet - currentTurn.getCardCycleBet() != 0) embed.setTitle(currentTurn.getMember().getNickname()+" raised $"+(int)(amount - oldBet - currentTurn.getCardCycleBet())+". Pot: $"+(int)pot+".");
+            }
+            else embed.setTitle(currentTurn.getMember().getNickname()+" checked. Pot: $"+(int)pot+".");
 
-            if(currentTurn.isAllIn()) responder.post(currentTurn.getMember().getNickname()+" is all in!");
+            if(currentTurn.isAllIn()) embed.addField(currentTurn.getMember().getNickname()+" is all in!", "", false);
+
+            responder.getPoker().sendMessage(embed.build()).queue();
 
             nextTurn();
         }
 
         public void match() {
-            bet(bet - currentTurn.getWager());
+            bet(bet - currentTurn.getCardCycleBet());
         }
 
         public void fold() {
             currentTurn.setFolded(true);
 
-            responder.post(currentTurn.getMember().getNickname()+" folded.");
+            EmbedBuilder embed = new EmbedBuilder();
+            embed.setColor(Color.orange);
+            embed.setTitle(currentTurn.getMember().getNickname()+" folded.");
+            responder.getPoker().sendMessage(embed.build()).queue();
 
             nextTurn();
         }
@@ -219,7 +272,7 @@ public class Round {
         // check if everyone is all in
         boolean allAllin = true;
         for(Player p : players) {
-            if(!p.isAllIn()) {
+            if(!p.isAllIn() && !p.isFolded()) {
                 allAllin = false;
                 break;
             }

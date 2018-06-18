@@ -4,6 +4,7 @@ import com.cpjd.models.Card;
 import com.cpjd.models.SUIT;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 public class HandEvaluator {
@@ -26,13 +27,19 @@ public class HandEvaluator {
         ArrayList<ArrayList<Card>> combos = getCombinations(card1, card2);
 
         for(ArrayList<Card> card : combos) {
+            System.out.println("Hand value:"+computeHandValue(card).toString());
+
             potentialValues.add(computeHandValue(card));
         }
 
         // Select the best hand value out of the bunch
         HandValueDistinguish.determineBest(potentialValues);
 
-        return potentialValues.get(new Random().nextInt(potentialValues.size()));
+        HandValue skeet = potentialValues.get(new Random().nextInt(potentialValues.size()));
+
+        System.out.println("Player category: "+skeet.getCategory().toString());
+
+        return skeet;
     }
 
     private HandValue computeHandValue(ArrayList<Card> cards) {
@@ -62,7 +69,7 @@ public class HandEvaluator {
 
     private boolean isFourOfAKind(ArrayList<Card> cards) {
         for(int i = 0; i < cards.size(); i++) {
-            int occurrences = 0;
+            int occurrences = 1;
             for(int j = 0; j < cards.size(); j++) {
                 if(j == i) continue;
                 if(cards.get(i).getNumber() == cards.get(j).getNumber()) occurrences++;
@@ -86,7 +93,7 @@ public class HandEvaluator {
 
     private boolean isThreeOfAKind(ArrayList<Card> cards) {
         for(int i = 0; i < cards.size(); i++) {
-            int occurrences = 0;
+            int occurrences = 1;
             for(int j = 0; j < cards.size(); j++) {
                 if(j == i) continue;
                 if(cards.get(i).getNumber() == cards.get(j).getNumber()) occurrences++;
@@ -97,27 +104,52 @@ public class HandEvaluator {
     }
 
     private boolean isTwoPair(ArrayList<Card> cards) {
+        ArrayList<Integer> exclude = new ArrayList<>(); // can never be checked again
+
         int pairs = 0;
+
         for(int i = 0; i < cards.size(); i++) {
-            int occurrences = 0;
-            for(int j = 0; j < cards.size(); j++) {
-                if(j == i) continue;
-                if(cards.get(i).getNumber() == cards.get(j).getNumber()) occurrences++;
+            if(exclude.contains(i)) continue;
+
+            for(int j = 0;j < cards.size(); j++) {
+                if(exclude.contains(j) || i == j) continue;
+
+                if (cards.get(i).getNumber().getNumerical() == cards.get(j).getNumber().getNumerical()) {
+                    pairs++;
+                    if(pairs == 2) return true;
+                    exclude.add(i);
+                    exclude.add(j);
+                    break;
+                }
             }
-            if(occurrences == 2) pairs++;
         }
-        return pairs == 2;
+
+        return false;
     }
 
+    // For other functions to work, this MUST mean that there are EXACTLY 2 pairs
     private boolean isPair(ArrayList<Card> cards) {
+        ArrayList<Integer> exclude = new ArrayList<>();
+
         for(int i = 0; i < cards.size(); i++) {
-            int occurrences = 0;
+            if(exclude.contains(i)) continue;
+
+            int occurrences = 1;
+
             for(int j = 0; j < cards.size(); j++) {
-                if(j == i) continue;
-                if(cards.get(i).getNumber() == cards.get(j).getNumber()) occurrences++;
+                if(j == i || exclude.contains(j)) continue;
+
+                if(cards.get(i).getNumber().getNumerical() == cards.get(j).getNumber().getNumerical()) {
+                    occurrences++;
+                    exclude.add(i);
+                    exclude.add(j);
+                    break;
+                }
             }
+
             if(occurrences == 2) return true;
         }
+
         return false;
     }
 
@@ -133,40 +165,17 @@ public class HandEvaluator {
     }
 
     private boolean ascending(ArrayList<Card> cards) {
-        int lowest = cards.get(0).getNumber().getNumerical();
-        for(Card c : cards) {
-            if(c.getNumber().getNumerical() < lowest) lowest = c.getNumber().getNumerical();
+        Collections.sort(cards); // sort them lowest to highest
+        for(int i = 1; i < cards.size(); i++) {
+            if(cards.get(i).getNumber().getNumerical() - 1 != cards.get(i - 1).getNumber().getNumerical()) return false;
         }
 
-        int search = lowest;
-        for(int i = 0; i < cards.size(); i++) {
-            if(cards.get(i).getNumber().getNumerical() == search + 1) {
-                search++;
-                i = 0;
-            }
+        for(int i = 1; i < cards.size(); i++) {
+            if(cards.get(i).getNumber().getNumericalAceLow() - 1 != cards.get(i - 1).getNumber().getNumericalAceLow()) return false;
         }
 
-        if(search == lowest + 4) return true;
-
-        // also check ace as low
-        lowest = cards.get(0).getNumber().getNumericalAceLow();
-        for(Card c : cards) {
-            if(c.getNumber().getNumericalAceLow() < lowest) lowest = c.getNumber().getNumericalAceLow();
-        }
-
-        search = lowest;
-        for(int i = 0; i < cards.size(); i++) {
-            if(cards.get(i).getNumber().getNumericalAceLow() == search + 1) {
-                search++;
-                i = 0;
-            }
-        }
-
-        return search == lowest + 4;
-
+        return true;
     } // account for low ace here also
-
-
 
     private ArrayList<ArrayList<Card>> getCombinations(Card card1, Card card2) {
         // Output array
