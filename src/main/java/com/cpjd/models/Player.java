@@ -23,8 +23,8 @@ public class Player implements Comparable<Player> {
 
     private boolean leaveRequested;
     private double gameBank;
-    private double wager;
-    private double cardCycleBet;
+    private double wager; // money throughout the round
+    private double cardCycleBet; // money throughout turn of betting
     private boolean folded;
 
     private Card card1, card2;

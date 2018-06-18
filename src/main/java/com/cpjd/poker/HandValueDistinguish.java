@@ -29,15 +29,15 @@ public class HandValueDistinguish {
         }
     }
 
-    // 0 for tie, 1 for value1 win, 2 for value2 win
+    // 0 for tie, 1 for value1 win, 2 for value2 win // todo improve
     private static int findWinner(HandValue value1, HandValue value2) {
         if(match(value1, value2)) return 0;
 
-        if(getHighestCard(value1.getCards(), 4) > getHighestCard(value2.getCards(), 4)) return 1;
-        else if(getHighestCard(value1.getCards(), 3) > getHighestCard(value2.getCards(), 3)) return 1;
-        else if(getHighestCard(value1.getCards(), 2) > getHighestCard(value2.getCards(), 2)) return 1;
-        else if(getHighestCard(value1.getCards(), 1) > getHighestCard(value2.getCards(), 1)) return 1;
-        else if(getHighestCard(value1.getCards(), 0) > getHighestCard(value2.getCards(), 0)) return 1;
+        if((value1.getCards().size() == 5 && value2.getCards().size() == 5) && getHighestCard(value1.getCards(), 4) > getHighestCard(value2.getCards(), 4)) return 1;
+        else if((value1.getCards().size() >= 4 && value2.getCards().size() >= 4) && getHighestCard(value1.getCards(), 3) > getHighestCard(value2.getCards(), 3)) return 1;
+        else if((value1.getCards().size() >= 3 && value2.getCards().size() >= 3) && getHighestCard(value1.getCards(), 2) > getHighestCard(value2.getCards(), 2)) return 1;
+        else if((value1.getCards().size() >= 2 && value2.getCards().size() >= 2) && getHighestCard(value1.getCards(), 1) > getHighestCard(value2.getCards(), 1)) return 1;
+        else if((value1.getCards().size() >= 1 && value2.getCards().size() >= 1) && getHighestCard(value1.getCards(), 0) > getHighestCard(value2.getCards(), 0)) return 1;
         else return 2;
     }
 

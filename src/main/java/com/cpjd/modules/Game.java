@@ -23,7 +23,7 @@ public class Game {
     private STATE state = STATE.IDLE;
 
     private Responder responder;
-    private ArrayList<Player> players = new ArrayList<>();
+    private ArrayList<Player> players;
     private SaveFile save;
 
     private Round activeRound;
@@ -32,8 +32,7 @@ public class Game {
 
     public Game(TextChannel poker) {
         this.poker = poker;
-
-
+        players = new ArrayList<>();
         responder = new Responder(poker, players);
     }
     public void commandReceived(Member author, String message) {
@@ -44,7 +43,8 @@ public class Game {
             if(message.equalsIgnoreCase("open") && state == STATE.IDLE) {
                 state = STATE.OPEN;
                 responder.post("Game is now open. Join the game with \"join\".");
-                players = new ArrayList<>();
+                players.clear();
+                save = new SaveFile();
             }
             else if(message.equalsIgnoreCase("end") && state == STATE.IN_PROGRESS) {
                 // Force quit the round
@@ -57,12 +57,14 @@ public class Game {
                 save.save(players);
                 state = STATE.IDLE;
                 responder.post("Game ended.");
+                players.clear();
             } else if(message.startsWith("start")) {
                 try {
                     double deposit = Double.parseDouble(message.split("\\s+")[1]);
                     for(Player p : players) {
                         p.deposit(deposit);
                     }
+                    state = STATE.IN_PROGRESS;
                     activeRound = new Round(responder, players);
                     activeRound.begin();
                 } catch(Exception e) {
@@ -78,13 +80,13 @@ public class Game {
             Player p = save.search(author);
             players.add(p);
 
-            responder.post(author.getNickname()+" joined the game. "+players.size()+"players in the game.");
+            responder.post(author.getNickname()+" joined the game. "+players.size()+" players in the game.");
         }
 
         /*
          * Turn syntax
          */
-        if(activeRound != null && activeRound.getCurrentTurn().matchesMember(author)) {
+        if(activeRound != null && activeRound.getCurrentTurn().matchesMember(author) && state == STATE.IN_PROGRESS) {
             if(message.equalsIgnoreCase("fold")) activeRound.turn().fold();
             else if(message.equalsIgnoreCase("all in")) activeRound.turn().allIn();
             else if(message.equalsIgnoreCase("check")) activeRound.turn().check();
@@ -98,7 +100,7 @@ public class Game {
             }
         }
 
-        if(message.equalsIgnoreCase("banks")) {
+        if(message.equalsIgnoreCase("banks") && state == STATE.IN_PROGRESS) {
             banks();
         }
     }
@@ -108,6 +110,8 @@ public class Game {
      * Outputs the information about money to the channel
      */
     public void banks() {
+        if(activeRound == null) return;
+
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("Texas Hold-Em Standings");
         eb.setColor(Color.BLUE);

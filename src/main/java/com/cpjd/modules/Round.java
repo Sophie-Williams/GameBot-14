@@ -76,8 +76,12 @@ public class Round {
         for(Player p : players) {
             p.setFolded(false);
 
-            p.dealHand(deck.remove(0), deck.remove(1));
+            p.dealHand(deck.remove(0), deck.remove(0));
+
+            pot += p.withdraw(2);
         }
+
+        responder.post("Everyone antes $2.");
 
         responder.dmHands();
 
@@ -94,11 +98,12 @@ public class Round {
 
     private void nextBettingPhase() {
         // Reset the cycle betting for each player
+        bet = 0;
         for(Player p : players) {
             p.setCardCycleBet(0);
-            pot += p.withdraw(2);
         }
-        responder.post("Everyone antes $2.");
+
+        elapsedTurns = 0;
 
         // Check if the round needs to end
         if(drawn.size() == 5) {
@@ -144,7 +149,7 @@ public class Round {
             return;
         }
 
-        responder.post(currentTurn.getMember().getNickname()+"'s turn. The bet is at $"+bet+". Use `bet <amount>`, `match`, `fold`, `check`, or `all in`.");
+        responder.post(currentTurn.getMember().getNickname()+"'s turn. The bet is at $"+bet+". The pot is at $"+pot+" Use `bet <amount>`, `match`, `fold`, `check`, or `all in`.");
     }
 
     public TurnProcessor turn() {
@@ -157,8 +162,8 @@ public class Round {
          * @param amount the amount to bet
          */
         public void bet(double amount) {
-            if(amount < bet - currentTurn.getCardCycleBet() && currentTurn.getGameBank() >= bet - currentTurn.getCardCycleBet()) {
-                responder.post("Your bet of $"+amount+" does not meet the minimum bet of $"+bet+".");
+            if(amount < bet - currentTurn.getWager()) {
+                responder.post("Your bet of $"+amount+" does not meet the minimum bet of $"+(bet - currentTurn.getWager())+".");
                 return;
             }
 
@@ -166,23 +171,30 @@ public class Round {
             if(wager > bet) bet = wager;
             pot += wager;
 
+            currentTurn.setCardCycleBet(currentTurn.getCardCycleBet() + wager);
+
+            if(wager != 0) responder.post(currentTurn.getMember().getNickname()+" bet $"+wager+".");
+            else responder.post(currentTurn.getMember().getNickname()+" checked.");
+
             if(currentTurn.isAllIn()) responder.post(currentTurn.getMember().getNickname()+" is all in!");
 
             nextTurn();
         }
 
         public void match() {
-            bet(bet - currentTurn.getCardCycleBet());
+            bet(bet - currentTurn.getWager());
         }
 
         public void fold() {
             currentTurn.setFolded(true);
 
+            responder.post(currentTurn.getMember().getNickname()+" folded.");
+
             nextTurn();
         }
 
         public void allIn() {
-            bet(currentTurn.getGameBank());
+            bet(currentTurn.getGameBank() - currentTurn.getWager());
         }
 
         public void check() {
@@ -204,6 +216,19 @@ public class Round {
         if(currentTurnIndex == players.size()) currentTurnIndex = 0;
         currentTurn = players.get(currentTurnIndex);
 
+        // check if everyone is all in
+        boolean allAllin = true;
+        for(Player p : players) {
+            if(!p.isAllIn()) {
+                allAllin = false;
+                break;
+            }
+        }
+        if(allAllin) {
+            end(false);
+            return;
+        }
+
         if(currentTurn.isFolded() || currentTurn.isAllIn()) {
             nextTurn();
             return;
@@ -214,9 +239,13 @@ public class Round {
         // 2) every player's betting cycle meets the current bet
         boolean minimumBetsMet = true;
         for(Player p : players) {
-            if(p.getCardCycleBet() < bet) {
-                minimumBetsMet = false;
-                break;
+            for(Player p2 : players) {
+                if(p2.matchesMember(p.getMember())) continue;
+
+                if(p.getCardCycleBet() != p2.getCardCycleBet()) {
+                    minimumBetsMet = false;
+                    break;
+                }
             }
         }
 
