@@ -46,6 +46,28 @@ public class GameEvaluator {
 
         // A winner needs to be determined from the data above. To do this, each player will be assigned
         // a HandValue object that represents the value of the player's best 5 cards.
+        ArrayList<HandValue> values = new ArrayList<>();
+        for(Player p : players) {
+            p.setValue(new HandEvaluator(drawn).computePlayerValue(p.getCard1(), p.getCard2()));
+            p.getValue().setID(p.getMember());
+            values.add(p.getValue());
+        }
+
+
+        // Reconstruct player array
+        HandValueDistinguish.determineBest(values);
+
+        ArrayList<Player> won = new ArrayList<>();
+
+        for(HandValue v : values) {
+            for(Player p : players) {
+                if(v.getID().getUser().getId().equalsIgnoreCase(p.getMember().getUser().getId())) {
+                    won.add(p);
+                }
+            }
+        }
+
+        winner(won);
     }
 
     private void winner(ArrayList<Player> winners) {

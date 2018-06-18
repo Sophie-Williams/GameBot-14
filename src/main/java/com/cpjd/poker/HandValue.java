@@ -3,15 +3,22 @@ package com.cpjd.poker;
 import com.cpjd.models.Card;
 import lombok.Data;
 import lombok.Getter;
+import net.dv8tion.jda.core.entities.Member;
+
+import java.util.ArrayList;
 
 /**
  * HandValue represents the value of the player's 5 best cards
  */
 @Data
-public class HandValue {
+public class HandValue implements Comparable<HandValue> {
+
+    @Override
+    public int compareTo(HandValue o) {
+        return Integer.compare(category.getValue(), o.getCategory().getValue());
+    }
 
     public enum CATEGORY {
-        ROYAl_FLUSH(9),
         STRAIGHT_FLUSH(8),
         FOUR_OF_A_KIND(7),
         FULL_HOUSE(6),
@@ -30,16 +37,11 @@ public class HandValue {
         }
     }
 
+    private Member ID;
+    private ArrayList<Card> cards;
     private CATEGORY category;
-    /*
-     * Rates the quality of the above category
-     */
-    private int quality;
-    private Card highestCard;
 
-    public int compareTo(HandValue value) {
-        if(this != value) {
-            return Integer.compare(category.getValue(), value.getCategory().getValue());
-        } else return Integer.compare(quality, value.getQuality());
+    public HandValue(ArrayList<Card> cards) {
+        this.cards = cards;
     }
 }

@@ -3,6 +3,7 @@ package com.cpjd.modules;
 import com.cpjd.comms.Responder;
 import com.cpjd.models.Card;
 import com.cpjd.models.Player;
+import com.cpjd.poker.GameEvaluator;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -88,7 +89,7 @@ public class Round {
      * @param cancelRound true to not process a winner
      */
     public void end(boolean cancelRound) {
-
+        if(!cancelRound) new GameEvaluator(responder, drawn, players, pot).evaluate();
     }
 
     private void nextBettingPhase() {

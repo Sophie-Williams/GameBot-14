@@ -1,12 +1,10 @@
 package com.cpjd.poker;
 
 import com.cpjd.models.Card;
-import com.cpjd.models.NUMBER;
-import com.cpjd.models.Player;
 import com.cpjd.models.SUIT;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class HandEvaluator {
 
@@ -26,90 +24,149 @@ public class HandEvaluator {
         ArrayList<HandValue> potentialValues = new ArrayList<>();
 
         ArrayList<ArrayList<Card>> combos = getCombinations(card1, card2);
+
+        for(ArrayList<Card> card : combos) {
+            potentialValues.add(computeHandValue(card));
+        }
+
+        // Select the best hand value out of the bunch
+        HandValueDistinguish.determineBest(potentialValues);
+
+        return potentialValues.get(new Random().nextInt(potentialValues.size()));
     }
 
     private HandValue computeHandValue(ArrayList<Card> cards) {
+        HandValue value = new HandValue(cards);
 
+        // Set category
+        if(isStraightFlush(cards)) value.setCategory(HandValue.CATEGORY.STRAIGHT_FLUSH);
+        else if(isFourOfAKind(cards)) value.setCategory(HandValue.CATEGORY.FOUR_OF_A_KIND);
+        else if(isFullHouse(cards)) value.setCategory(HandValue.CATEGORY.FULL_HOUSE);
+        else if(isFlush(cards)) value.setCategory(HandValue.CATEGORY.FLUSH);
+        else if(isStraight(cards)) value.setCategory(HandValue.CATEGORY.STRAIGHT);
+        else if(isThreeOfAKind(cards)) value.setCategory(HandValue.CATEGORY.THREE_OF_A_KIND);
+        else if(isTwoPair(cards)) value.setCategory(HandValue.CATEGORY.TWO_PAIR);
+        else if(isPair(cards)) value.setCategory(HandValue.CATEGORY.PAIR);
+        else value.setCategory(HandValue.CATEGORY.HIGH_CARD);
+
+        return value;
     }
 
     /*
-     * Quality - these assume types
+     * Category functions
      */
-    public int getStraightFlushQuality(ArrayList<Card> cards) {
-        return getHighest(cards);
-    }
 
-    public int getFourOfAKindQuality(ArrayList<Card> cards) {
-        return getHighest(cards);
-    }
-
-    /*
-     * Types
-     */
     private boolean isStraightFlush(ArrayList<Card> cards) {
         return sameSuit(cards) && ascending(cards);
     }
 
     private boolean isFourOfAKind(ArrayList<Card> cards) {
-        Card c = cards.get(0);
-        int number = 0;
-        for(Card s : cards) {
-            if(c.getSuit().equals(s.getSuit())) number++;
+        for(int i = 0; i < cards.size(); i++) {
+            int occurrences = 0;
+            for(int j = 0; j < cards.size(); j++) {
+                if(j == i) continue;
+                if(cards.get(i).getNumber() == cards.get(j).getNumber()) occurrences++;
+            }
+            if(occurrences == 4) return true;
         }
-        if(number == 4) return true;
-        number = 0;
-        c = cards.get(1);
-        for(Card s : cards) {
-            if(c.getSuit().equals(s.getSuit())) number++;
-        }
-        if(number == 4) return true;
         return false;
     }
 
+    private boolean isFullHouse(ArrayList<Card> cards) {
+        return isThreeOfAKind(cards) && isPair(cards);
+    }
+
+    private boolean isFlush(ArrayList<Card> cards) {
+        return sameSuit(cards);
+    }
+
+    private boolean isStraight(ArrayList<Card> cards) {
+        return ascending(cards);
+    }
+
+    private boolean isThreeOfAKind(ArrayList<Card> cards) {
+        for(int i = 0; i < cards.size(); i++) {
+            int occurrences = 0;
+            for(int j = 0; j < cards.size(); j++) {
+                if(j == i) continue;
+                if(cards.get(i).getNumber() == cards.get(j).getNumber()) occurrences++;
+            }
+            if(occurrences == 3) return true;
+        }
+        return false;
+    }
+
+    private boolean isTwoPair(ArrayList<Card> cards) {
+        int pairs = 0;
+        for(int i = 0; i < cards.size(); i++) {
+            int occurrences = 0;
+            for(int j = 0; j < cards.size(); j++) {
+                if(j == i) continue;
+                if(cards.get(i).getNumber() == cards.get(j).getNumber()) occurrences++;
+            }
+            if(occurrences == 2) pairs++;
+        }
+        return pairs == 2;
+    }
+
+    private boolean isPair(ArrayList<Card> cards) {
+        for(int i = 0; i < cards.size(); i++) {
+            int occurrences = 0;
+            for(int j = 0; j < cards.size(); j++) {
+                if(j == i) continue;
+                if(cards.get(i).getNumber() == cards.get(j).getNumber()) occurrences++;
+            }
+            if(occurrences == 2) return true;
+        }
+        return false;
+    }
+
+    /*
+     *
+     * Helper functions
+     *
+     */
     private boolean sameSuit(ArrayList<Card> cards) {
         SUIT suit = cards.get(0).getSuit();
         for(Card c : cards) if(c.getSuit() != suit) return false;
         return true;
     }
 
-    private static int getHighest(ArrayList<Card> cards) {
-        int highest = cards.get(0).getNumber().getNumerical(true);
-
+    private boolean ascending(ArrayList<Card> cards) {
+        int lowest = cards.get(0).getNumber().getNumerical();
         for(Card c : cards) {
-            if(c.getNumber().getNumerical(true) > highest) highest = c.getNumber().getNumerical(true);
+            if(c.getNumber().getNumerical() < lowest) lowest = c.getNumber().getNumerical();
         }
 
-        return highest;
-    }
-
-    private static boolean ascending(ArrayList<Card> cards) {
-        return isAscendingAceHigh(cards, true);
-    }
-
-    private static boolean isAscendingAceHigh(ArrayList<Card> cards, boolean aceHigh) {
-        // Find lowest number (assume aces are 1)
-        int lowest = cards.get(0).getNumber().getNumerical(aceHigh);
-        for (Card c : cards) {
-            if (c.getNumber().getNumerical(aceHigh) < lowest) lowest = c.getNumber().getNumerical(aceHigh);
-        }
-
-        // Now, cards must contain increasing levels
-        boolean ascending = true;
-        for (int i = 0, search = lowest; i < cards.size(); i++) {
-            if (cards.get(i).getNumber().getNumerical(aceHigh) == search) {
-                // Found a card, increment
+        int search = lowest;
+        for(int i = 0; i < cards.size(); i++) {
+            if(cards.get(i).getNumber().getNumerical() == search + 1) {
                 search++;
-            }
-
-            if (i == cards.size() && search != lowest + 4) {
-                ascending = false;
+                i = 0;
             }
         }
 
-        if(!aceHigh) return ascending; // prevent stack overflow
+        if(search == lowest + 4) return true;
 
-        return ascending || isAscendingAceHigh(cards, false);
-    }
+        // also check ace as low
+        lowest = cards.get(0).getNumber().getNumericalAceLow();
+        for(Card c : cards) {
+            if(c.getNumber().getNumericalAceLow() < lowest) lowest = c.getNumber().getNumericalAceLow();
+        }
+
+        search = lowest;
+        for(int i = 0; i < cards.size(); i++) {
+            if(cards.get(i).getNumber().getNumericalAceLow() == search + 1) {
+                search++;
+                i = 0;
+            }
+        }
+
+        return search == lowest + 4;
+
+    } // account for low ace here also
+
+
 
     private ArrayList<ArrayList<Card>> getCombinations(Card card1, Card card2) {
         // Output array

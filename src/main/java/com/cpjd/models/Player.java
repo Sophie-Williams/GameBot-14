@@ -1,10 +1,11 @@
 package com.cpjd.models;
 
+import com.cpjd.poker.HandValue;
 import lombok.Data;
 import net.dv8tion.jda.core.entities.Member;
 
 @Data
-public class Player {
+public class Player implements Comparable<Player> {
 
     /*
      * Characteristics
@@ -27,6 +28,8 @@ public class Player {
     private boolean folded;
 
     private Card card1, card2;
+
+    private HandValue value;
 
     public Player(Member member, double bank) {
         this.member = member;
@@ -150,5 +153,10 @@ public class Player {
     private double round(double value, int precision) {
         int scale = (int) Math.pow(10, precision);
         return (double) Math.round(value * scale) / scale;
+    }
+
+    @Override
+    public int compareTo(Player o) {
+        return value.compareTo(o.getValue());
     }
 }
