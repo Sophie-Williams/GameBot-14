@@ -61,6 +61,11 @@ public class Game {
                 responder.post("Game ended.");
                 players.clear();
             } else if(message.startsWith("start")) {
+                if(players.size() <= 1) {
+                    responder.post("At least 2 players required to start game.");
+                    return;
+                }
+
                 try {
                     double deposit = Double.parseDouble(message.split("\\s+")[1]);
                     for(Player p : players) {
@@ -114,11 +119,14 @@ public class Game {
             else if(message.equalsIgnoreCase("all in")) activeRound.turn().allIn();
             else if(message.equalsIgnoreCase("check")) activeRound.turn().check();
             else if(message.equalsIgnoreCase("match") || message.equalsIgnoreCase("call")) activeRound.turn().match();
-            else if(message.startsWith("bet")) {
+            else if(message.toLowerCase().startsWith("bet")) {
                 try {
                     activeRound.turn().bet(Double.parseDouble(message.split("\\s+")[1]));
                 } catch(Exception e) {
-                    responder.post("Incorrect syntax. Please use bet <amount>.");
+                    EmbedBuilder err = new EmbedBuilder();
+                    err.setColor(Color.red);
+                    err.setTitle("Incorrect syntax. Please use bet <amount>.");
+                    responder.getPoker().sendMessage(err.build()).queue();
                 }
             }
         }

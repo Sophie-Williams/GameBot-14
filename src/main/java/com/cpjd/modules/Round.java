@@ -80,7 +80,6 @@ public class Round {
      * Begins the round by shuffling the deck, dming players, and initializing the first round
      */
     public void begin() {
-        turnLeader = new Random().nextInt(players.size());
         currentTurn = players.get(turnLeader);
 
         deck = Card.deck();
@@ -88,6 +87,7 @@ public class Round {
         // Deal cards
         for(Player p : players) {
             p.setFolded(false);
+            p.setCardCycleBet(0);
 
             p.dealHand(deck.remove(0), deck.remove(0));
 
@@ -167,6 +167,12 @@ public class Round {
             return;
         }
 
+        // Check if the player is folded
+        if(currentTurn.isFolded() || currentTurn.isAllIn()) {
+            nextTurn();
+            return;
+        }
+
         EmbedBuilder embed = new EmbedBuilder();
         embed.setColor(Color.blue);
         embed.setTitle(currentTurn.getMember().getNickname()+"'s turn.");
@@ -183,30 +189,45 @@ public class Round {
         return tp;
     }
 
+    // wager show ante
+    // flopped cards after a fold
+
     public class TurnProcessor {
         /**
          * Bets the specified amount
          * @param amount the amount to bet
          */
         public void bet(double amount) {
+            if(amount < 0) return;
+
             // Verify the player has enough money
             if(currentTurn.getWager() + amount > currentTurn.getGameBank()) {
-                responder.post("You can't wager more money than you have.");
-                return;
+                if((bet - currentTurn.getCardCycleBet()) < (currentTurn.getGameBank() - currentTurn.getWager())) {
+                    EmbedBuilder err = new EmbedBuilder();
+
+                    err.setTitle("Insufficient funds.");
+
+                    err.setColor(Color.red);
+                    responder.getPoker().sendMessage(err.build()).queue();
+                    return;
+                }
             }
 
             if(amount < bet -  currentTurn.getCardCycleBet()) {
-                responder.post("Your bet of $"+amount+" does not meet the minimum bet of $"+(bet - currentTurn.getCardCycleBet())+".");
-                return;
-            }
+                if((bet - currentTurn.getCardCycleBet()) < (currentTurn.getGameBank() - currentTurn.getWager())) {
+                    EmbedBuilder err = new EmbedBuilder();
 
-            boolean raised = false;
-            double oldBet = bet;
+                    err.setTitle("Your bet of $"+amount+" does not meet the minimum bet of $"+(bet - currentTurn.getCardCycleBet())+".");
+
+                    err.setColor(Color.red);
+                    responder.getPoker().sendMessage(err.build()).queue();
+                    return;
+                }
+            }
 
             double wager = currentTurn.wager(amount);
             if(wager > bet) {
                 bet = wager;
-                raised = true;
             }
             pot += wager;
 
@@ -253,7 +274,6 @@ public class Round {
         public void check() {
             bet(0);
         }
-
     }
 
     /**
@@ -282,17 +302,16 @@ public class Round {
             return;
         }
 
-        if(currentTurn.isFolded() || currentTurn.isAllIn()) {
-            nextTurn();
-            return;
-        }
-
         // check if the next betting phase begins, this will happen when:
         // 1) every player has had at least 1 turn
         // 2) every player's betting cycle meets the current bet
         boolean minimumBetsMet = true;
         for(Player p : players) {
+            if(p.isFolded()) continue;
+
             for(Player p2 : players) {
+                if(p2.isFolded()) continue;
+
                 if(p2.matchesMember(p.getMember())) continue;
 
                 if(p.getCardCycleBet() != p2.getCardCycleBet()) {

@@ -12,7 +12,12 @@ public class RoleAuth {
      * @return true if the user has elevated privledges
      */
     public static boolean hasElevatedPrivileges(Member user) {
-        return user.getNickname().equals("Will") || user.isOwner();
+        try {
+            return user.getNickname().equals("Will") || user.isOwner();
+        } catch(Exception e) {
+            return false;
+        }
+
     }
 
 }
