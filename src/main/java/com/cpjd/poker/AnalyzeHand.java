@@ -6,6 +6,7 @@ import com.cpjd.models.Suit;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 public class AnalyzeHand {
 
@@ -212,14 +213,26 @@ public class AnalyzeHand {
      * @return True if the cards are ascending
      */
     boolean ascending(ArrayList<Card> cards) {
-        Collections.sort(cards); // sort them lowest to highest
+        // Sort the cards with ace as high
+        cards.sort((o1, o2) -> o1.compareTo(o2, false));
+
+        boolean ascending = true;
 
         for(int i = 1; i < cards.size(); i++) {
-            if((cards.get(i).getNumber().getNumerical() != cards.get(i - 1).getNumber().getNumerical() + 1
-            && cards.get(i).getNumber().getNumericalAceLow() != cards.get(i - 1).getNumber().getNumericalAceLow() + 1)) return false;
+            if(cards.get(i).getNumber().getNumerical() - 1 != cards.get(i - 1).getNumber().getNumerical()) ascending = false;
         }
 
-        return true;
+        if(ascending) return true;
+
+        // Retry with ace as low
+        cards.sort((o1, o2) -> o1.compareTo(o2, true));
+        ascending = true;
+
+        for(int i = 1; i < cards.size(); i++) {
+            if(cards.get(i).getNumber().getNumericalAceLow() - 1 != cards.get(i - 1).getNumber().getNumericalAceLow()) ascending = false;
+        }
+
+        return ascending;
     }
 
     /**

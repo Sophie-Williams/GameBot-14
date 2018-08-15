@@ -15,7 +15,7 @@ import java.util.Random;
 
 @Data
 @AllArgsConstructor
-public class Card implements Comparable<Card> {
+public class Card {
 
     private Suit suit;
     private Number number;
@@ -126,8 +126,7 @@ public class Card implements Comparable<Card> {
         }
     }
 
-    @Override
-    public int compareTo(Card o) {
-        return Integer.compare(number.getNumerical(), o.getNumber().getNumerical());
+    public int compareTo(Card o, boolean aceLow) {
+        return Integer.compare(aceLow ? number.getNumericalAceLow() : number.getNumerical(), aceLow ? o.getNumber().getNumericalAceLow() : o.getNumber().getNumerical());
     }
 }

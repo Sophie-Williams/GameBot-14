@@ -7,6 +7,8 @@ import lombok.Getter;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Objects;
 
 /**
  * HandValue represents the value of the player's 5 best cards
@@ -47,6 +49,7 @@ public class HandValue implements Comparable<HandValue> {
      */
     public HandValue(ArrayList<Card> cards, Category category) {
         this.cards = cards;
+        this.category = category;
     }
 
     @Override
@@ -66,11 +69,21 @@ public class HandValue implements Comparable<HandValue> {
      * @return value < 0 if value1 is better, value > 0 if value 2 is better, and 0 if they're the same hand
      */
     public static int distinguish(HandValue value1, HandValue value2) {
-        Collections.sort(value1.getCards());
-        Collections.sort(value2.getCards());
+        value1.getCards().sort((o1, o2) -> o1.compareTo(o2, false));
+        value2.getCards().sort((o1, o2) -> o1.compareTo(o2, false));
 
         return Integer.compare(value1.getCards().get(value1.getCards().size() - 1).getNumber().getNumerical(),
                 value2.getCards().get(value2.getCards().size() - 1).getNumber().getNumerical());
+    }
+
+    // required to make the test work
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        HandValue handValue = (HandValue) o;
+        return Objects.equals(cards, handValue.cards) &&
+                category == handValue.category;
     }
 
 }
