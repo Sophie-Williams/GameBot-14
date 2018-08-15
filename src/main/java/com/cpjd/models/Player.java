@@ -14,7 +14,6 @@ public class Player implements Comparable<Player> {
     private Member member;
     // Winnings (gameBank) are added to bank after "end" is executed
 
-
     private double bank;
 
     /*

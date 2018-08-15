@@ -1,8 +1,9 @@
 package com.cpjd.models;
 
-public enum SUIT {
+public enum Suit {
     SPADES,DIAMONDS,HEARTS,CLUBS;
 
+    @Override
     public String toString() {
         if(this == SPADES) return "S";
         else if(this == DIAMONDS) return "D";

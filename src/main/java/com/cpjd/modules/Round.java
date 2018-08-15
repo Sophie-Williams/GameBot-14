@@ -3,13 +3,13 @@ package com.cpjd.modules;
 import com.cpjd.comms.Responder;
 import com.cpjd.models.Card;
 import com.cpjd.models.Player;
-import com.cpjd.poker.GameEvaluator;
+import com.cpjd.poker.AnalyzeGame;
+import com.cpjd.poker.GameResult;
 import lombok.Getter;
 import net.dv8tion.jda.core.EmbedBuilder;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * A round represents the time between dealing the cards and a player winning the money.
@@ -106,13 +106,51 @@ public class Round {
      * @param cancelRound true to not process a winner
      */
     public void end(boolean cancelRound) {
-        if(!cancelRound) new GameEvaluator(responder, drawn, players, pot).evaluate();
+        if(!cancelRound) {
+            AnalyzeGame analyzeGame = new AnalyzeGame();
+            GameResult result = analyzeGame.analyzeGame(players, drawn);
+
+            // Handle the winners
+            for(Player p : players) {
+                p.setGameBank(p.getGameBank() - p.getWager());
+            }
+
+            ArrayList<Player> winners = result.getWinners();
+
+            if(winners.size() == 1) {
+                EmbedBuilder embed = new EmbedBuilder();
+                embed.setColor(Color.magenta);
+                embed.addField(winners.get(0).getMember().getNickname()+" won the pot of $"+(int)pot+"!", "", false);
+                String info = "";
+                for(Player p : players) {
+                    info += p.getMember().getNickname() +"'s Hand: "+p.getCard1().toString()+", "+p.getCard2().toString() + "\n";
+                }
+                embed.addField("Hands", info, false);
+
+                if(winners.size() > 1) {
+                    // Display hand
+                    for(Player p : winners) {
+                        embed.addField(p.getMember().getNickname(), p.getCard1().toString()+", "+p.getCard2().toString()+"\n"+p.getValue().getCategory(), true);
+                    }
+                }
+                responder.getPoker().sendMessage(embed.build()).queue();
+            } else {
+                String players = "";
+                for(Player p : winners) {
+                    players += p.getMember().getNickname()+", ";
+                }
+                responder.post("Tie! Winners: "+players+" each won $"+pot / winners.size()+".");
+            }
+
+            for(Player p : winners) {
+                p.deposit(pot / winners.size());
+            }
+        }
 
         if(!cancelRound) {
             int newTurnLeader = turnLeader + 1;
             if(turnLeader == players.size()) turnLeader = 0;
             if(listener != null) listener.roundEnded(newTurnLeader);
-            listener = null;
         }
     }
 

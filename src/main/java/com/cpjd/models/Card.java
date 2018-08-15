@@ -17,8 +17,8 @@ import java.util.Random;
 @AllArgsConstructor
 public class Card implements Comparable<Card> {
 
-    private SUIT suit;
-    private NUMBER number;
+    private Suit suit;
+    private Number number;
 
     /**
      * Returns the file path to the png image representing this card
@@ -29,10 +29,10 @@ public class Card implements Comparable<Card> {
 
         name.append(number.getID());
 
-        if(suit == SUIT.SPADES) name.append("S");
-        else if(suit == SUIT.DIAMONDS) name.append("D");
-        else if(suit == SUIT.HEARTS) name.append("H");
-        else if(suit == SUIT.CLUBS) name.append("C");
+        if(suit == Suit.SPADES) name.append("S");
+        else if(suit == Suit.DIAMONDS) name.append("D");
+        else if(suit == Suit.HEARTS) name.append("H");
+        else if(suit == Suit.CLUBS) name.append("C");
 
         File card = new File(Bot.CARD_DIRECTORY + File.separator + name.toString() + ".png");
 
@@ -52,11 +52,11 @@ public class Card implements Comparable<Card> {
     public static ArrayList<Card> deck() {
         ArrayList<Card> deck = new ArrayList<>();
 
-        for(NUMBER number : NUMBER.values()) {
-            deck.add(new Card(SUIT.CLUBS, number));
-            deck.add(new Card(SUIT.HEARTS, number));
-            deck.add(new Card(SUIT.SPADES, number));
-            deck.add(new Card(SUIT.DIAMONDS, number));
+        for(Number number : Number.values()) {
+            deck.add(new Card(Suit.CLUBS, number));
+            deck.add(new Card(Suit.HEARTS, number));
+            deck.add(new Card(Suit.SPADES, number));
+            deck.add(new Card(Suit.DIAMONDS, number));
         }
 
 
@@ -117,7 +117,6 @@ public class Card implements Comparable<Card> {
 
                 BufferedImage io = ImageIO.read(back);
                 g.drawImage(io, 4 * 691, 0, null);
-
             }
 
             ImageIO.write(image, "png", combined);

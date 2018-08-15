@@ -3,22 +3,22 @@ package com.cpjd.poker;
 import com.cpjd.models.Card;
 import lombok.Data;
 import lombok.Getter;
-import net.dv8tion.jda.core.entities.Member;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * HandValue represents the value of the player's 5 best cards
+ *
+ * Note:
+ * -Royal flushes aren't a category because the {@link HandValue#distinguish(HandValue, HandValue)} method will choose a royal flush
+ * over a straight flush.
  */
 @Data
 public class HandValue implements Comparable<HandValue> {
 
-    @Override
-    public int compareTo(HandValue o) {
-        return Integer.compare(category.getValue(), o.getCategory().getValue());
-    }
-
-    public enum CATEGORY {
+    public enum Category {
         STRAIGHT_FLUSH(8),
         FOUR_OF_A_KIND(7),
         FULL_HOUSE(6),
@@ -32,16 +32,45 @@ public class HandValue implements Comparable<HandValue> {
         @Getter
         private int value;
 
-        CATEGORY(int value) {
+        Category(int value) {
             this.value = value;
         }
     }
 
-    private Member ID;
     private ArrayList<Card> cards;
-    private CATEGORY category;
+    private Category category;
 
-    public HandValue(ArrayList<Card> cards) {
+    /**
+     * Instantiates a HandValue object representing the value of the player's 5 best cards
+     * @param cards The player's 5 best cards
+     * @param category The category value of the player, note, if category==folded, cards will be null as they aren't important
+     */
+    public HandValue(ArrayList<Card> cards, Category category) {
         this.cards = cards;
     }
+
+    @Override
+    public int compareTo(@Nonnull HandValue o) {
+        return Integer.compare(category.getValue(), o.getCategory().getValue());
+    }
+
+    public boolean equals(HandValue value) {
+        return value.getCategory() == category && distinguish(value, this) == 0;
+    }
+
+    /**
+     * Distinguishes between two hands of the same category to determine
+     * which hand is better
+     * @param value1 The first hand
+     * @param value2 The second hand
+     * @return value < 0 if value1 is better, value > 0 if value 2 is better, and 0 if they're the same hand
+     */
+    public static int distinguish(HandValue value1, HandValue value2) {
+        Collections.sort(value1.getCards());
+        Collections.sort(value2.getCards());
+
+        return Integer.compare(value1.getCards().get(value1.getCards().size() - 1).getNumber().getNumerical(),
+                value2.getCards().get(value2.getCards().size() - 1).getNumber().getNumerical());
+    }
+
 }
