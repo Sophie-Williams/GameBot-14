@@ -5,11 +5,14 @@ import com.cpjd.models.Card;
 import com.cpjd.models.Player;
 import com.cpjd.poker.AnalyzeGame;
 import com.cpjd.poker.GameResult;
+import com.cpjd.poker.HandValue;
 import lombok.Getter;
 import net.dv8tion.jda.core.EmbedBuilder;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * A round represents the time between dealing the cards and a player winning the money.
@@ -163,10 +166,32 @@ class Round {
                         pot -= winAmount / poorWinners.size();
                     }
 
+                    double tempPot = pot;
+
                     // The rest should be evenly distributed to the non-poor winners
                     for(Player p : winners) {
                         if(!poorWinners.contains(p)) {
                             p.deposit(pot / (winners.size() - poorWinners.size()));
+                            tempPot -= pot / (winners.size() - poorWinners.size());
+                        }
+                    }
+
+                    if(tempPot > 0) {
+                        // Sort loser hands
+                        result.getLosers().sort(Comparator.comparing(Player::getValue));
+
+                        // The best hand
+                        HandValue best = result.getLosers().get(result.getLosers().size() - 1).getValue();
+
+                        ArrayList<Player> otherWinners = new ArrayList<>();
+
+                        for(Player p : result.getLosers()) {
+                            if(HandValue.distinguish(best, p.getValue()) == 0) otherWinners.add(p);
+                        }
+
+                        // Award remaining of the pot
+                        for(Player p : otherWinners) {
+                            p.deposit(pot / (otherWinners.size()));
                         }
                     }
 
