@@ -160,7 +160,7 @@ class Round {
 
                         p.deposit(winAmount / poorWinners.size());
 
-                        pot -= winAmount;
+                        pot -= winAmount / poorWinners.size();
                     }
 
                     // The rest should be evenly distributed to the non-poor winners
