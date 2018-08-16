@@ -110,43 +110,59 @@ public class Round {
             AnalyzeGame analyzeGame = new AnalyzeGame();
             GameResult result = analyzeGame.analyzeGame(players, drawn);
 
-            // Handle the winners
-            for(Player p : players) {
-                p.setGameBank(p.getGameBank() - p.getWager());
-            }
+            /*
+             * Okay, so the round is now over and we have a list of winners, and losers.
+             *
+             * Poker game winning procedures are rather complex, so I'm going to carefully walk through
+             * each step.
+             *
+             * 1) Firstly, every player gets the amount they wagered removed from their bank account
+             */
+            for(Player p : players) p.setGameBank(p.getGameBank() - p.getWager());
 
             ArrayList<Player> winners = result.getWinners();
 
-            if(winners.size() == 1) {
-                EmbedBuilder embed = new EmbedBuilder();
-                embed.setColor(Color.magenta);
-                embed.addField(winners.get(0).getMember().getNickname()+" won the pot of $"+(int)pot+"!", "", false);
-                String info = "";
-                for(Player p : players) {
-                    info += p.getMember().getNickname() +"'s Hand: "+p.getCard1().toString()+", "+p.getCard2().toString() + "\n";
-                }
-                embed.addField("Hands", info, false);
+            // Next, determine the end state. This will determine how money will be distributed. There are three possible end states:
+            // 1) All but one player is folded
+            // 2) There are some players who haven't wagered as much as the others, because they made it here, they must be all-in and unable
+            //    to bet more. They will each be awarded a max pot of 2 times what they put in. More work here.
+            // 3) All players have wagered the same amount. Distribute wealth evenly.
 
-                if(winners.size() > 1) {
-                    // Display hand
-                    for(Player p : winners) {
-                        embed.addField(p.getMember().getNickname(), p.getCard1().toString()+", "+p.getCard2().toString()+"\n"+p.getValue().getCategory(), true);
-                    }
-                }
-                responder.getPoker().sendMessage(embed.build()).queue();
+            // Case 1
+            if(result.isPlayersFolded()) {
+                result.getWinners().get(0).deposit(pot);
             } else {
-                String players = "";
-                for(Player p : winners) {
-                    players += p.getMember().getNickname()+", ";
+                // Case 2
+                ArrayList<Player> poorWinners = new ArrayList<>(); // winners who can't win the whole pot
+                for(Player winner : winners) {
+
+                    boolean poorPlayer = false;
+
+                    for(Player w2 : winners) {
+                        if(winner.getWager() < w2.getWager()) {
+                            poorPlayer = true;
+                            break;
+                        }
+                    }
+
+                    if(poorPlayer) poorWinners.add(winner);
                 }
-                responder.post("Tie! Winners: "+players+" each won $"+pot / winners.size()+".");
+
+                if(poorWinners.size() > 0) {
+                    // Distribute wealth specially here
+
+
+
+                } else {
+                    // Distribute wealth evenly to the players
+                    for(Player p : winners) p.deposit(pot / winners.size());
+                }
             }
 
-            for(Player p : winners) {
-                p.deposit(pot / winners.size());
-            }
+            responder.postWinners(result, pot);
         }
 
+        // Begin the next round
         if(!cancelRound) {
             int newTurnLeader = turnLeader + 1;
             if(turnLeader == players.size()) turnLeader = 0;

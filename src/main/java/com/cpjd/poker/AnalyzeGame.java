@@ -29,7 +29,9 @@ public class AnalyzeGame {
         // Okay, if only one player is left, that means everyone else has folded
         if(players.size() == 1) {
             winners.add(players.get(0));
-            return new GameResult(winners, losers);
+            GameResult gr = new GameResult(winners, losers);
+            gr.setPlayersFolded(true);
+            return gr;
         }
 
         // Looks like there are still players who haven't folded, so keep analyzing

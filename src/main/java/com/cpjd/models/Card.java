@@ -59,7 +59,6 @@ public class Card {
             deck.add(new Card(Suit.DIAMONDS, number));
         }
 
-
         try {
             int[] nums = RandomORG.doRequest();
             for(int i = 0; i < 7; i++) {

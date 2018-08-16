@@ -102,9 +102,13 @@ public class Game {
                 if(p1.matchesMember(author)) return;
             }
 
+            if(author.getNickname() == null || author.getNickname().equals("") || author.getNickname().equals("null")) {
+                responder.post("You must have a nickname to play.");
+                return;
+            }
+
             Player p = save.search(author);
             players.add(p);
-
 
             //players.add(new Player(author.getGuild().getMembersByNickname("Sam", true).get(0), 0));
 
