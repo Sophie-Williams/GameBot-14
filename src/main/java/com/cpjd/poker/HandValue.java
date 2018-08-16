@@ -58,7 +58,7 @@ public class HandValue implements Comparable<HandValue> {
     }
 
     public boolean equals(HandValue value) {
-        return value.getCategory() == category && distinguish(value, this) == 0;
+        return value.getCategory().equals(category);
     }
 
     /**
@@ -72,8 +72,13 @@ public class HandValue implements Comparable<HandValue> {
         value1.getCards().sort((o1, o2) -> o1.compareTo(o2, false));
         value2.getCards().sort((o1, o2) -> o1.compareTo(o2, false));
 
-        return Integer.compare(value1.getCards().get(value1.getCards().size() - 1).getNumber().getNumerical(),
-                value2.getCards().get(value2.getCards().size() - 1).getNumber().getNumerical());
+        for(int i = value1.getCards().size() - 1; i >= 0; i--) {
+            int result =  Integer.compare(value1.getCards().get(i).getNumber().getNumerical(),
+                    value2.getCards().get(i).getNumber().getNumerical());
+            if(result != 0) return result;
+        }
+
+        return 0;
     }
 
     // required to make the test work

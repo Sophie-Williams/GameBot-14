@@ -83,6 +83,8 @@ class Round {
      * Begins the round by shuffling the deck, dming players, and initializing the first round
      */
     void begin() {
+        if(turnLeader >= players.size()) turnLeader = 0;
+
         currentTurn = players.get(turnLeader);
 
         deck = Card.deck();
@@ -227,6 +229,19 @@ class Round {
             return;
         }
 
+        // Determine if all the other players have folded
+        boolean allFolded = true;
+        for(Player p : players) {
+            if(!p.isFolded() && !p.matchesMember(currentTurn.getMember())) {
+                allFolded = false;
+                break;
+            }
+        }
+        if(allFolded) {
+            end(false);
+            return;
+        }
+
         // Draw cards
         if(drawn.size() == 0) {
             drawn.add(deck.remove(0));
@@ -334,14 +349,18 @@ class Round {
              */
             EmbedBuilder embed = new EmbedBuilder();
             embed.setColor(Color.orange);
+            StringBuilder builder = new StringBuilder();
+
             if(wager != 0) {
                 //if(!raised || oldBet == 0)
-                    embed.setTitle(currentTurn.getMember().getNickname()+" bet $"+(int)wager+". Pot: $"+(int)pot+".");
+                    builder.append(currentTurn.getMember().getNickname()).append(" bet $").append((int) wager).append(". Pot: $").append((int) pot).append(".\n");
                // else if(amount - oldBet - currentTurn.getCardCycleBet() != 0) embed.setTitle(currentTurn.getMember().getNickname()+" raised $"+(int)(amount - oldBet - currentTurn.getCardCycleBet())+". Pot: $"+(int)pot+".");
             }
-            else embed.setTitle(currentTurn.getMember().getNickname()+" checked. Pot: $"+(int)pot+".");
+            else builder.append(currentTurn.getMember().getNickname()).append(" checked. Pot: $").append((int) pot).append(".\n");
 
-            if(currentTurn.isAllIn()) embed.addField(currentTurn.getMember().getNickname()+" is all in!", "", false);
+            if(currentTurn.isAllIn()) builder.append(currentTurn.getMember().getNickname()).append(" is all in!\n");
+
+            embed.setTitle(builder.toString());
 
             responder.getPoker().sendMessage(embed.build()).queue();
 
@@ -394,6 +413,12 @@ class Round {
             }
         }
         if(allAllin) {
+            // Ensure that all cards have been drawn
+            while(drawn.size() != 5) {
+                drawn.add(deck.remove(0));
+            }
+
+            responder.postDrawn(drawn);
             end(false);
             return;
         }

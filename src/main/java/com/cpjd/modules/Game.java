@@ -36,6 +36,7 @@ public class Game {
         responder = new Responder(poker, players);
     }
     public void commandReceived(Member author, String message) {
+
         /*
          * Handle game state change
          */
@@ -108,7 +109,9 @@ public class Game {
             Player p = save.search(author);
             players.add(p);
 
-            //players.add(new Player(author.getGuild().getMembersByNickname("Sam", true).get(0), 0));
+            players.add(new Player(author.getGuild().getMembersByNickname("Sam", true).get(0), 0));
+            players.add(new Player(author.getGuild().getMembersByNickname("Alex", true).get(0), 0));
+
 
             responder.post(author.getNickname()+" joined the game. "+players.size()+" players in the game.");
         }
@@ -116,7 +119,7 @@ public class Game {
         /*
          * Turn syntax
          */
-        if(activeRound != null && activeRound.getCurrentTurn().matchesMember(author) && state == STATE.IN_PROGRESS) {
+        if(activeRound != null /*&& activeRound.getCurrentTurn().matchesMember(author)&&*/ && state == STATE.IN_PROGRESS) {
             if(message.equalsIgnoreCase("fold")) activeRound.turn().fold();
             else if(message.equalsIgnoreCase("all in")) activeRound.turn().allIn();
             else if(message.equalsIgnoreCase("check")) activeRound.turn().check();

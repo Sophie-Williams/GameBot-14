@@ -50,28 +50,31 @@ public class Responder {
 
         // If there were poor winners
         if(poorWinners != null) {
+            StringBuilder builder = new StringBuilder();
             for(Player p : poorWinners) {
-                embed.addField(p.getMember().getNickname()+" was poor, and only won $"+(int)(p.getWager() * players.size() / poorWinners.size())+". Hand: "+p.getCard1().toString() + ", "+p.getCard2().toString(), "", false);
+                builder.append(p.getMember().getNickname()).append(" was poor, and only won $").append((int) (p.getWager() * players.size() / poorWinners.size())).append(". Hand: ").append(p.getCard1().toString()).append(", ").append(p.getCard2().toString()).append("\n");
             }
             for(Player p : winners) {
-                if(!poorWinners.contains(p)) embed.addField(p.getMember().getNickname()+" wins $"+(int)(pot / (winners.size() - poorWinners.size()))
-                        +". Hand: "+p.getCard1().toString() + ", "+p.getCard2().toString(), "", false);
+                if(!poorWinners.contains(p)) builder.append(p.getMember().getNickname()).append(" wins $").append((int) (pot / (winners.size() - poorWinners.size()))).append(". Hand: ").append(p.getCard1().toString()).append(", ").append(p.getCard2().toString()).append("\n");
             }
+            embed.setTitle(builder.toString());
             poker.sendMessage(embed.build()).queue();
             return;
         }
 
         // One winner and folded
         if(winners.size() == 1 && winners.get(0).isFolded()) {
-            embed.addField(winners.get(0).getMember().getNickname()+" won the pot of $"+(int)pot+"!", "", false);
+            embed.setTitle(winners.get(0).getMember().getNickname()+" won the pot of $"+(int)pot+"!");
             poker.sendMessage(embed.build()).queue();
             return;
         }
 
         // Multiple winners, not folded
+        StringBuilder builder = new StringBuilder();
         for(Player p : winners) {
-            embed.addField(p.getMember().getNickname()+" wins $"+(int)(pot / winners.size())+". Hand: "+p.getCard1().toString() +", "+p.getCard2().toString(), "", false);
+            builder.append(p.getMember().getNickname()).append(" wins $").append((int) (pot / winners.size())).append(". Hand: ").append(p.getCard1().toString()).append(", ").append(p.getCard2().toString()).append("\n");
         }
+        embed.setTitle(builder.toString());
         poker.sendMessage(embed.build()).queue();
     }
 
@@ -88,6 +91,8 @@ public class Responder {
     }
 
     public void dmHands() {
+        if(true) return;
+
         Player will = players.get(0);
 
         for(Player p : players) {
