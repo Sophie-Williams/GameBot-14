@@ -7,11 +7,9 @@ import com.cpjd.utils.SaveFile;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.managers.fields.Field;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * The game module handles the "Texas Hold-em" game and its related flow and commands.
@@ -144,7 +142,7 @@ public class Game {
     /**
      * Outputs the information about money to the channel
      */
-    public void banks() {
+    private void banks() {
         if(activeRound == null) return;
 
         EmbedBuilder eb = new EmbedBuilder();

@@ -11,24 +11,23 @@ public class Player implements Comparable<Player> {
      * Characteristics
      */
 
-    private Member member;
-    // Winnings (gameBank) are added to bank after "end" is executed
+    private Member member; // the Discord object to identify and communicate with this player
 
-    private double bank;
+    private double bank; // this probably won't be used, it gets saved to the file system to save progress if it's something we decide to use
 
     /*
      * Game only
      */
 
-    private boolean leaveRequested;
-    private double gameBank;
-    private double wager; // money throughout the round
-    private double cardCycleBet; // money throughout turn of betting
-    private boolean folded;
+    private boolean leaveRequested; // if the player wants to leave the game
+    private double gameBank; // how much money the player has
+    private double wager; // total money bet throughout the current round of poker
+    private double cardCycleBet; // money throughout one turn of betting
+    private boolean folded; // if the player is folded
 
-    private Card card1, card2;
+    private Card card1, card2; // the cards the player has
 
-    private HandValue value;
+    private HandValue value; // a placeholder to hold hand value information for game evaluation
 
     public Player(Member member, double bank) {
         this.member = member;

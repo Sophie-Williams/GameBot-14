@@ -17,7 +17,7 @@ import java.util.ArrayList;
  *
  * Each round is consisted of several betting phases
  */
-public class Round {
+class Round {
 
     private TurnProcessor tp; // Receives turns from the player whose turn it is
 
@@ -64,11 +64,11 @@ public class Round {
 
     private RoundEndListener listener;
 
-    public void setListener(RoundEndListener listener) {
+    void setListener(RoundEndListener listener) {
         this.listener = listener;
     }
 
-    public Round(Responder responder, ArrayList<Player> players, int turnLeader) {
+    Round(Responder responder, ArrayList<Player> players, int turnLeader) {
         this.responder = responder;
         this.players = players;
         this.drawn = new ArrayList<>();
@@ -79,7 +79,7 @@ public class Round {
     /**
      * Begins the round by shuffling the deck, dming players, and initializing the first round
      */
-    public void begin() {
+    void begin() {
         currentTurn = players.get(turnLeader);
 
         deck = Card.deck();
@@ -94,7 +94,7 @@ public class Round {
             pot += p.withdraw(2);
         }
 
-        responder.begin(2, currentTurn);
+        responder.begin(2);
 
         responder.dmHands();
 
@@ -105,7 +105,7 @@ public class Round {
      * Ends the round by finding a winner
      * @param cancelRound true to not process a winner
      */
-    public void end(boolean cancelRound) {
+    void end(boolean cancelRound) {
         if(!cancelRound) {
             AnalyzeGame analyzeGame = new AnalyzeGame();
             GameResult result = analyzeGame.analyzeGame(players, drawn);
@@ -131,6 +131,7 @@ public class Round {
             // Case 1
             if(result.isPlayersFolded()) {
                 result.getWinners().get(0).deposit(pot);
+                responder.postWinners(winners, null, pot);
             } else {
                 // Case 2
                 ArrayList<Player> poorWinners = new ArrayList<>(); // winners who can't win the whole pot
@@ -150,20 +151,36 @@ public class Round {
 
                 if(poorWinners.size() > 0) {
                     // Distribute wealth specially here
+                    for(Player p : poorWinners) {
+                        /*
+                         * Calculate how much that player can win
+                         */
+                        // Amount they can win
+                        double winAmount = p.getWager() * players.size();
 
+                        p.deposit(winAmount / poorWinners.size());
 
+                        pot -= winAmount;
+                    }
 
+                    // The rest should be evenly distributed to the non-poor winners
+                    for(Player p : winners) {
+                        if(!poorWinners.contains(p)) {
+                            p.deposit(pot / (winners.size() - poorWinners.size()));
+                        }
+                    }
+
+                    responder.postWinners(winners, poorWinners, pot);
                 } else {
                     // Distribute wealth evenly to the players
                     for(Player p : winners) p.deposit(pot / winners.size());
+
+                    responder.postWinners(winners, null, pot);
                 }
             }
 
-            responder.postWinners(result, pot);
-        }
 
-        // Begin the next round
-        if(!cancelRound) {
+            // Begin the next round
             int newTurnLeader = turnLeader + 1;
             if(turnLeader == players.size()) turnLeader = 0;
             if(listener != null) listener.roundEnded(newTurnLeader);
@@ -239,7 +256,7 @@ public class Round {
         responder.getPoker().sendMessage(embed.build()).queue();
     }
 
-    public TurnProcessor turn() {
+    TurnProcessor turn() {
         return tp;
     }
 
@@ -251,7 +268,7 @@ public class Round {
          * Bets the specified amount
          * @param amount the amount to bet
          */
-        public void bet(double amount) {
+        void bet(double amount) {
             if(amount < 0) return;
 
             // Verify the player has enough money
@@ -306,11 +323,11 @@ public class Round {
             nextTurn();
         }
 
-        public void match() {
+        void match() {
             bet(bet - currentTurn.getCardCycleBet());
         }
 
-        public void fold() {
+        void fold() {
             currentTurn.setFolded(true);
 
             EmbedBuilder embed = new EmbedBuilder();
@@ -321,11 +338,11 @@ public class Round {
             nextTurn();
         }
 
-        public void allIn() {
+        void allIn() {
             bet(currentTurn.getGameBank() - currentTurn.getWager());
         }
 
-        public void check() {
+        void check() {
             bet(0);
         }
     }
@@ -334,7 +351,7 @@ public class Round {
      * Proceeds to the next turn, call this after a user makes their play.
      * This method will decide whether to draw cards or issue more turns to the users
      */
-    public void nextTurn() {
+    private void nextTurn() {
         elapsedTurns++;
 
         // set the next player
