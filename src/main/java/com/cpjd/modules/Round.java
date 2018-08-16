@@ -176,7 +176,7 @@ class Round {
                         }
                     }
 
-                    if(tempPot > 0) {
+                    if(tempPot > 0 && tempPot == pot) {
                         // Sort loser hands
                         result.getLosers().sort(Comparator.comparing(Player::getValue));
 
