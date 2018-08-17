@@ -278,19 +278,7 @@ public class AnalyzeHand {
         // Each hand will leave 2 cards out, these means,
         // Every card needs to be left out twice total
         else if (total.size() == 7) {
-            for(int skipStartIndex = 0; skipStartIndex < 7; skipStartIndex++) {
-                ArrayList<Card> hand = new ArrayList<>();
-
-                int firstCard = (skipStartIndex + 2) % 7;
-
-                for(int i = 0; i < 5; i++) {
-                    hand.add(total.get(firstCard));
-                    firstCard++;
-                    if(firstCard == 7) firstCard = 0;
-                }
-                possibleHands.add(hand);
-            }
-            /*for(int firstSkip = 0; firstSkip < 7; firstSkip++) {
+            for(int firstSkip = 0; firstSkip < 7; firstSkip++) {
                 for(int secondSkip =0; secondSkip < 7; secondSkip++) {
                     if(firstSkip == secondSkip) continue;
 
@@ -305,7 +293,7 @@ public class AnalyzeHand {
 
                     possibleHands.add(hand);
                 }
-            }*/
+            }
         }
         return possibleHands;
     }

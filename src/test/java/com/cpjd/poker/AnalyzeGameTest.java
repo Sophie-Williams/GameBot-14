@@ -19,16 +19,16 @@ public class AnalyzeGameTest {
         // For testing faulty win configurations
         ArrayList<Player> players = new ArrayList<>();
 
-        Player will = new Player("Will", card(Suit.HEARTS, Number.KING), card(Suit.CLUBS, Number.TWO));
-        Player sam = new Player("Sam", card(Suit.DIAMONDS, Number.TEN), card(Suit.DIAMONDS, Number.ACE));
+        Player will = new Player("Will", card(Suit.DIAMONDS, Number.ACE), card(Suit.CLUBS, Number.NINE));
+        Player sam = new Player("Daniel", card(Suit.SPADES, Number.ACE), card(Suit.DIAMONDS, Number.THREE));
         //Player alex = new Player("Alex", card(Suit.SPADES, Number.JACK), card(Suit.CLUBS, Number.THREE));
 
         players.add(sam);
         players.add(will);
         //players.add(alex);
 
-        ArrayList<Card> deck = cards(card(Suit.HEARTS, Number.ACE), card(Suit.DIAMONDS, Number.TWO), card(Suit.HEARTS, Number.SIX)
-        ,card(Suit.DIAMONDS, Number.THREE), card(Suit.DIAMONDS, Number.JACK));
+        ArrayList<Card> deck = cards(card(Suit.HEARTS, Number.TEN), card(Suit.HEARTS, Number.THREE), card(Suit.CLUBS, Number.ACE)
+        ,card(Suit.DIAMONDS, Number.KING), card(Suit.HEARTS, Number.KING));
 
         AnalyzeGame analyzeGame = new AnalyzeGame();
 
