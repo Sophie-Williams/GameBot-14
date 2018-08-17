@@ -76,27 +76,31 @@ public class Game {
                     state = STATE.IN_PROGRESS;
                     activeRound = new Round(responder, players, 0);
                     activeRound.begin();
-                    activeRound.setListener(newTurnLeader -> {
-
-                        // Remove bankrupt players
-                        for(int i = 0; i < players.size(); i++) {
-                            if(players.get(i).getGameBank() <= 0) {
-                                responder.post(players.get(i).getMember().getNickname()+" was removed because of poverty.");
-                                players.remove(i);
-                                i--;
+                    activeRound.setListener(new Round.RoundEndListener() {
+                        @Override
+                        public void roundEnded(int newTurnLeader) {
+                            // Remove bankrupt players
+                            for(int i = 0; i < players.size(); i++) {
+                                if(players.get(i).getGameBank() <= 0) {
+                                    responder.post(players.get(i).getMember().getNickname()+" was removed because of poverty.");
+                                    players.remove(i);
+                                    i--;
+                                }
                             }
-                        }
 
-                        if(players.size() == 1) {
-                            responder.post(players.get(0).getMember().getNickname()+" is the only player left! Stopping the game...");
-                            state = STATE.IDLE;
-                            players.clear();
-                            return;
-                        }
+                            if(players.size() == 1) {
+                                responder.post(players.get(0).getMember().getNickname()+" is the only player left! Stopping the game...");
+                                state = STATE.IDLE;
+                                players.clear();
+                                return;
+                            }
 
-                        activeRound = new Round(responder, players, newTurnLeader);
-                        activeRound.begin();
+                            activeRound = new Round(responder, players, newTurnLeader);
+                            activeRound.setListener(this);
+                            activeRound.begin();
+                        }
                     });
+
                 } catch(Exception e) {
                     responder.post("An error occur while trying to start the game. Please use correct syntax: start <starting-bank>.");
                 }
@@ -119,9 +123,8 @@ public class Game {
             Player p = save.search(author);
             players.add(p);
 
-            players.add(new Player(author.getGuild().getMembersByNickname("Sam", true).get(0), 0));
-            players.add(new Player(author.getGuild().getMembersByNickname("Alex", true).get(0), 0));
-
+            //players.add(new Player(author.getGuild().getMembersByNickname("Sam", true).get(0), 0));
+            //players.add(new Player(author.getGuild().getMembersByNickname("Alex", true).get(0), 0));
 
             responder.post(author.getNickname()+" joined the game. "+players.size()+" players in the game.");
         }
@@ -129,7 +132,7 @@ public class Game {
         /*
          * Turn syntax
          */
-        if(activeRound != null /*&& activeRound.getCurrentTurn().matchesMember(author)&&*/ && state == STATE.IN_PROGRESS) {
+        if(activeRound != null && activeRound.getCurrentTurn().matchesMember(author) && state == STATE.IN_PROGRESS) {
             if(message.equalsIgnoreCase("fold")) activeRound.turn().fold();
             else if(message.equalsIgnoreCase("all in")) activeRound.turn().allIn();
             else if(message.equalsIgnoreCase("check")) activeRound.turn().check();
@@ -143,13 +146,15 @@ public class Game {
                     err.setTitle("Incorrect syntax. Please use bet <amount>.");
                     responder.getPoker().sendMessage(err.build()).queue();
                 }
-            } else if(message.equalsIgnoreCase("results")) {
-                responder.post( "```Markdown\n"+AnalyzeGame.lastGameResults+"```");
             }
         }
 
         if(message.equalsIgnoreCase("banks") && state == STATE.IN_PROGRESS) {
             banks();
+        }
+
+        else if(message.equalsIgnoreCase("results") && state == STATE.IN_PROGRESS) {
+            responder.post( "```Markdown\n"+AnalyzeGame.lastGameResults+"```");
         }
 
         if(message.equalsIgnoreCase("help")) {
@@ -197,4 +202,6 @@ public class Game {
         int scale = (int) Math.pow(10, 2);
         return (double) Math.round(value * scale) / scale;
     }
+
+    // TODO call needs to check for insufficient funds
 }

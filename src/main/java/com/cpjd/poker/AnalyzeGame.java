@@ -4,7 +4,6 @@ import com.cpjd.models.Card;
 import com.cpjd.models.Player;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 
 public class AnalyzeGame {
@@ -36,6 +35,8 @@ public class AnalyzeGame {
             winners.add(players.get(0));
             GameResult gr = new GameResult(winners, losers);
             gr.setPlayersFolded(true);
+
+            lastGameResults = "Results command unavailable for games won due to folding.";
             return gr;
         }
 
@@ -63,7 +64,6 @@ public class AnalyzeGame {
 
         // Okay, next resort the array with HandValue.distinguish
         players.sort((o1, o2) -> HandValue.distinguish(o1.getValue(), o2.getValue()));
-        Collections.reverse(players);
 
         HandValue winning = players.get(players.size() - 1).getValue();
 

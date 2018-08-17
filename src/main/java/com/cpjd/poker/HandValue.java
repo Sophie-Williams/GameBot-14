@@ -75,6 +75,7 @@ public class HandValue implements Comparable<HandValue> {
         for(int i = value1.getCards().size() - 1; i >= 0; i--) {
             int result =  Integer.compare(value1.getCards().get(i).getNumber().getNumerical(),
                     value2.getCards().get(i).getNumber().getNumerical());
+
             if(result != 0) return result;
         }
 

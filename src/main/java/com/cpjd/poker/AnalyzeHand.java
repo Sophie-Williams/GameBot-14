@@ -6,7 +6,6 @@ import com.cpjd.models.Suit;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 
 public class AnalyzeHand {
 
@@ -31,7 +30,7 @@ public class AnalyzeHand {
         // Remove all worse hands (that don't match category)
         HandValue.Category category = handValues.get(handValues.size() - 1).getCategory();
         for(int i = 0; i < handValues.size(); i++) {
-            if(handValues.get(i).getCategory() != category) {
+            if(!handValues.get(i).getCategory().equals(category)) {
                 handValues.remove(i);
                 i--;
             }
@@ -291,6 +290,22 @@ public class AnalyzeHand {
                 }
                 possibleHands.add(hand);
             }
+            /*for(int firstSkip = 0; firstSkip < 7; firstSkip++) {
+                for(int secondSkip =0; secondSkip < 7; secondSkip++) {
+                    if(firstSkip == secondSkip) continue;
+
+                    ArrayList<Card> hand = new ArrayList<>();
+
+                    // Skip the two cards, and all the others
+                    for(int i = 0; i < total.size(); i++) {
+                        if(i == secondSkip || i == firstSkip) continue;
+
+                        hand.add(total.get(i));
+                    }
+
+                    possibleHands.add(hand);
+                }
+            }*/
         }
         return possibleHands;
     }

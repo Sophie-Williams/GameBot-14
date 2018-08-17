@@ -11,7 +11,6 @@ import net.dv8tion.jda.core.EmbedBuilder;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 
 /**
@@ -136,7 +135,7 @@ class Round {
             // Case 1
             if(result.isPlayersFolded()) {
                 result.getWinners().get(0).deposit(pot);
-                responder.postWinners(winners, null, pot);
+                responder.postWinners(winners, null, true, pot);
             } else {
                 // Case 2
                 ArrayList<Player> poorWinners = new ArrayList<>(); // winners who can't win the whole pot
@@ -197,12 +196,12 @@ class Round {
                         }
                     }
 
-                    responder.postWinners(winners, poorWinners, pot);
+                    responder.postWinners(winners, poorWinners, false, pot);
                 } else {
                     // Distribute wealth evenly to the players
                     for(Player p : winners) p.deposit(pot / winners.size());
 
-                    responder.postWinners(winners, null, pot);
+                    responder.postWinners(winners, null, false, pot);
                 }
             }
 
@@ -368,6 +367,12 @@ class Round {
         }
 
         void match() {
+            // Check if the call is greater than the user's bank
+            if(bet - currentTurn.getCardCycleBet() > (int)(currentTurn.getGameBank() - currentTurn.getWager())) {
+                allIn();
+                return;
+            }
+
             bet(bet - currentTurn.getCardCycleBet());
         }
 

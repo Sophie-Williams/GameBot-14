@@ -45,7 +45,7 @@ public class Responder {
     }
 
     // winners array includes poorWinners
-    public void postWinners(ArrayList<Player> winners, ArrayList<Player> poorWinners, double pot) {
+    public void postWinners(ArrayList<Player> winners, ArrayList<Player> poorWinners, boolean becauseOfFolding, double pot) {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setColor(Color.magenta);
 
@@ -64,7 +64,7 @@ public class Responder {
         }
 
         // One winner and folded
-        if(winners.size() == 1 && winners.get(0).isFolded()) {
+        if(winners.size() == 1 && becauseOfFolding) {
             embed.setTitle(winners.get(0).getMember().getNickname()+" won the pot of $"+(int)pot+"!");
             poker.sendMessage(embed.build()).queue();
             return;
@@ -92,8 +92,6 @@ public class Responder {
     }
 
     public void dmHands() {
-        if(true) return;
-
         Player will = players.get(0);
 
         for(Player p : players) {

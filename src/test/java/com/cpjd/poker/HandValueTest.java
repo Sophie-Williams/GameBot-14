@@ -15,14 +15,16 @@ public class HandValueTest {
 
     @Test
     public void distinguish() {
-        ArrayList<Card> sam = cards(card(Suit.HEARTS, Number.THREE), card(Suit.DIAMONDS, Number.FIVE), card(Suit.HEARTS, Number.TWO), card(Suit.CLUBS, Number.TWO), card(Suit.DIAMONDS, Number.FIVE));
-        ArrayList<Card> will = cards(card(Suit.HEARTS, Number.FOUR), card(Suit.DIAMONDS, Number.FIVE), card(Suit.HEARTS, Number.TWO), card(Suit.CLUBS, Number.TWO), card(Suit.DIAMONDS, Number.FIVE));
+        ArrayList<Card> sam = cards(card(Suit.DIAMONDS, Number.TEN), card(Suit.DIAMONDS, Number.ACE), card(Suit.DIAMONDS, Number.THREE), card(Suit.DIAMONDS, Number.JACK), card(Suit.HEARTS, Number.ACE));
+        ArrayList<Card> will = cards(card(Suit.CLUBS, Number.TWO), card(Suit.DIAMONDS, Number.TWO), card(Suit.DIAMONDS, Number.JACK), card(Suit.HEARTS, Number.KING), card(Suit.HEARTS, Number.ACE));
 
-        HandValue samHand = new HandValue(sam, HandValue.Category.TWO_PAIR);
-        HandValue willHand = new HandValue(will, HandValue.Category.TWO_PAIR);
+        HandValue samHand = new HandValue(sam, HandValue.Category.PAIR);
+        HandValue willHand = new HandValue(will, HandValue.Category.PAIR);
+
+        System.out.println(HandValue.distinguish(willHand, samHand));
 
 
-        assertTrue(HandValue.distinguish(willHand, samHand) > 0);
+        assertTrue(HandValue.distinguish(willHand, samHand) < 0);
     }
 
     // Utils
