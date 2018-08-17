@@ -110,7 +110,7 @@ public class Game {
         /*
          * Joining the game
          */
-        if(message.equalsIgnoreCase("join") && state == STATE.OPEN) {
+        if((message.equalsIgnoreCase("j") || message.equalsIgnoreCase("join")) && state == STATE.OPEN) {
             for(Player p1 : players) {
                 if(p1.matchesMember(author)) return;
             }

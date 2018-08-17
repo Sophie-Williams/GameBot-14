@@ -330,7 +330,7 @@ class Round {
             }
 
             if(amount < bet -  currentTurn.getCardCycleBet()) {
-                if((bet - currentTurn.getCardCycleBet()) < (currentTurn.getGameBank() - currentTurn.getWager())) {
+                if((bet - currentTurn.getCardCycleBet()) <= (currentTurn.getGameBank() - currentTurn.getWager())) {
                     EmbedBuilder err = new EmbedBuilder();
 
                     err.setTitle("Your bet of $"+amount+" does not meet the minimum bet of $"+(bet - currentTurn.getCardCycleBet())+".");
@@ -438,11 +438,13 @@ class Round {
 
         // check for turn expire
         int allInPlayers = 0;
+        int foldedPlayers = 0;
         for(Player p : players) {
-            if(p.isFolded()) allInPlayers++;
+            if(p.isAllIn()) allInPlayers++;
+            if(p.isFolded()) foldedPlayers++;
         }
 
-        if(allInPlayers == players.size() - 1 && !turnExpire) {
+        if(allInPlayers == players.size() - foldedPlayers - 1 && !turnExpire) {
             turnExpire = true;
         }
 
