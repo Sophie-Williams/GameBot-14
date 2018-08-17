@@ -91,4 +91,11 @@ public class HandValue implements Comparable<HandValue> {
                 category == handValue.category;
     }
 
+    @Override
+    public String toString() {
+        return "HandValue{" +
+                "bestHand=" + cards +
+                ", category=" + category +
+                '}';
+    }
 }

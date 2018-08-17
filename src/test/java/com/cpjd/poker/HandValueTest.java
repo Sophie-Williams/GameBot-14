@@ -16,16 +16,13 @@ public class HandValueTest {
     @Test
     public void distinguish() {
         ArrayList<Card> sam = cards(card(Suit.HEARTS, Number.THREE), card(Suit.DIAMONDS, Number.FIVE), card(Suit.HEARTS, Number.TWO), card(Suit.CLUBS, Number.TWO), card(Suit.DIAMONDS, Number.FIVE));
-        ArrayList<Card> will = cards(card(Suit.CLUBS, Number.FIVE), card(Suit.DIAMONDS, Number.EIGHT), card(Suit.HEARTS, Number.TWO), card(Suit.CLUBS, Number.TWO), card(Suit.DIAMONDS, Number.SEVEN));
+        ArrayList<Card> will = cards(card(Suit.HEARTS, Number.FOUR), card(Suit.DIAMONDS, Number.FIVE), card(Suit.HEARTS, Number.TWO), card(Suit.CLUBS, Number.TWO), card(Suit.DIAMONDS, Number.FIVE));
 
         HandValue samHand = new HandValue(sam, HandValue.Category.TWO_PAIR);
         HandValue willHand = new HandValue(will, HandValue.Category.TWO_PAIR);
 
-        assertTrue(HandValue.distinguish(samHand, willHand) > 0);
-        assertTrue(HandValue.distinguish(willHand, samHand) < 0);
-        assertNotEquals(0, HandValue.distinguish(samHand, willHand));
 
-        assertEquals(0, HandValue.distinguish(samHand, samHand));
+        assertTrue(HandValue.distinguish(willHand, samHand) > 0);
     }
 
     // Utils

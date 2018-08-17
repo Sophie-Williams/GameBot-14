@@ -29,9 +29,19 @@ public class Player implements Comparable<Player> {
 
     private HandValue value; // a placeholder to hold hand value information for game evaluation
 
+    // Debug
+    private String debugName;
+
     public Player(Member member, double bank) {
         this.member = member;
         this.bank = bank;
+    }
+
+    public Player(String debugName, Card card1, Card card2) {
+        this.debugName = debugName;
+        this.bank = 100;
+        this.card1 = card1;
+        this.card2 = card2;
     }
 
     /*

@@ -6,6 +6,7 @@ import com.cpjd.poker.GameResult;
 import lombok.Getter;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 
@@ -104,5 +105,12 @@ public class Responder {
                     channel.sendFile(hand, message).queue());
         }
     }
+
+    public void dm(Member member, String msg) {
+        Message message = new MessageBuilder().append(msg).build();
+        member.getUser().openPrivateChannel().queue((channel) ->
+                channel.sendMessage(message).queue());
+    }
+
 
 }

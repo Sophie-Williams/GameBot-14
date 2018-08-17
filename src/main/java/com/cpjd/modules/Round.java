@@ -210,7 +210,7 @@ class Round {
             // Begin the next round
             int newTurnLeader = turnLeader + 1;
             if(turnLeader == players.size()) turnLeader = 0;
-            if(listener != null) listener.roundEnded(newTurnLeader);
+            listener.roundEnded(newTurnLeader);
         }
     }
 

@@ -9,6 +9,8 @@ import java.util.Comparator;
 
 public class AnalyzeGame {
 
+    public static String lastGameResults = "No games played yet.";
+
     /**
      * Analyzes a poker game, this only generates a {@link GameResult} object representing the game's
      * ending state. The calling class should handle distribution of the pot
@@ -46,15 +48,14 @@ public class AnalyzeGame {
         }
 
         // Now, sort players
-        players.sort((o1, o2) -> HandValue.distinguish(o1.getValue(), o2.getValue()));
-        Collections.reverse(players);
+        players.sort(Comparator.comparingInt(o -> o.getValue().getCategory().getValue()));
 
         // Determine highest, this will be the player at the end of the array
         HandValue winningCategory = players.get(players.size() - 1).getValue();
 
         // Remove all players who don't have an equivalent HandValue category
         for(int i = 0; i < players.size() - 1; i++) {
-            if(players.get(i).getValue().getCategory() != winningCategory.getCategory()) {
+            if(!players.get(i).getValue().getCategory().equals(winningCategory.getCategory())) {
                 losers.add(players.remove(i));
                 i--;
             }
@@ -62,6 +63,7 @@ public class AnalyzeGame {
 
         // Okay, next resort the array with HandValue.distinguish
         players.sort((o1, o2) -> HandValue.distinguish(o1.getValue(), o2.getValue()));
+        Collections.reverse(players);
 
         HandValue winning = players.get(players.size() - 1).getValue();
 
@@ -77,14 +79,22 @@ public class AnalyzeGame {
         winners.addAll(players);
 
         // DEBUG
+        StringBuilder results = new StringBuilder();
         for(Player p : playersList) {
-            System.out.println(p.getMember().getNickname() + ". Hand: " + p.getCard1().toString() + ", " + p.getCard2().toString() + ". Evaluated: " + p.getValue().toString() + " Winner? " + winners.contains(p));
+            results.append("PLAYER=").append(p.getMember() == null ?  p.getDebugName() : p.getMember().getNickname()).append(" HAND=(").append(p.getCard1().toString()).append(", ")
+                    .append(p.getCard2().toString()).append(") CPU-EVAL: ").append(p.getValue().toString()).append(" FOLDED=").append(p.isFolded())
+                    .append(" WINNER=").append(winners.contains(p)).append("\n");
         }
 
-        System.out.print("Cards: ");
+        results.append("\nDrawn Cards\n");
+
         for(Card c : drawn) {
-            System.out.print(c.toString() + ", ");
+            results.append(c.toString()).append(", ");
         }
+
+        lastGameResults = results.toString().substring(0, results.toString().length() - 2);
+
+        System.out.println(lastGameResults);
 
         return new GameResult(winners, losers);
     }

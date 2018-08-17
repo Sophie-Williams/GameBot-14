@@ -3,6 +3,7 @@ package com.cpjd.modules;
 import com.cpjd.comms.Responder;
 import com.cpjd.main.RoleAuth;
 import com.cpjd.models.Player;
+import com.cpjd.poker.AnalyzeGame;
 import com.cpjd.utils.SaveFile;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
@@ -29,6 +30,8 @@ public class Game {
     private Round activeRound;
 
     private TextChannel poker;
+
+    private final String HELP_TEXT = "";
 
     public Game(TextChannel poker) {
         this.poker = poker;
@@ -78,10 +81,17 @@ public class Game {
                         // Remove bankrupt players
                         for(int i = 0; i < players.size(); i++) {
                             if(players.get(i).getGameBank() <= 0) {
-                                responder.post(players.get(i).getMember().getNickname()+" was removed because of poverty. Your ass broke!");
+                                responder.post(players.get(i).getMember().getNickname()+" was removed because of poverty.");
                                 players.remove(i);
                                 i--;
                             }
+                        }
+
+                        if(players.size() == 1) {
+                            responder.post(players.get(0).getMember().getNickname()+" is the only player left! Stopping the game...");
+                            state = STATE.IDLE;
+                            players.clear();
+                            return;
                         }
 
                         activeRound = new Round(responder, players, newTurnLeader);
@@ -133,11 +143,35 @@ public class Game {
                     err.setTitle("Incorrect syntax. Please use bet <amount>.");
                     responder.getPoker().sendMessage(err.build()).queue();
                 }
+            } else if(message.equalsIgnoreCase("results")) {
+                responder.post( "```Markdown\n"+AnalyzeGame.lastGameResults+"```");
             }
         }
 
         if(message.equalsIgnoreCase("banks") && state == STATE.IN_PROGRESS) {
             banks();
+        }
+
+        if(message.equalsIgnoreCase("help")) {
+            StringBuilder helper = new StringBuilder("```Markdown\n" +
+                    "#Commands\n");
+
+            ArrayList<String> temp = new ArrayList<>();
+            temp.add("• bet [$] - Bets the specified amount");
+            temp.add("• call OR match- Auto-bets the minimum amount to stay in the round");
+            temp.add("• check - Bets $0.");
+            temp.add("• fold - Leaves the current betting round");
+            temp.add("• all in - Bets the entire bank");
+            temp.add("• banks - Outputs banking information during the game");
+            temp.add("• results - Outputs information about the last poker game results");
+            temp.add("• open - Opens a new poker game and allows people to join");
+            temp.add("• join - Joins an open poker game");
+            temp.add("• start [$] - Starts the game with the specified beginning bank for each player");
+            for(String s : temp) {
+                helper.append(s).append("\n");
+            }
+            helper.append("```");
+            responder.dm(author, helper.toString());
         }
     }
 
