@@ -133,10 +133,10 @@ public class Game {
          * Turn syntax
          */
         if(activeRound != null && activeRound.getCurrentTurn().matchesMember(author) && state == STATE.IN_PROGRESS) {
-            if(message.equalsIgnoreCase("fold")) activeRound.turn().fold();
+            if(message.equalsIgnoreCase("fold") || message.equalsIgnoreCase("f")) activeRound.turn().fold();
             else if(message.equalsIgnoreCase("all in")) activeRound.turn().allIn();
-            else if(message.equalsIgnoreCase("check")) activeRound.turn().check();
-            else if(message.equalsIgnoreCase("match") || message.equalsIgnoreCase("call")) activeRound.turn().match();
+            else if(message.equalsIgnoreCase("check") || message.equalsIgnoreCase("c")) activeRound.turn().check();
+            else if(message.equalsIgnoreCase("match") || message.equalsIgnoreCase("m") || message.equalsIgnoreCase("call")) activeRound.turn().match();
             else if(message.toLowerCase().startsWith("bet")) {
                 try {
                     activeRound.turn().bet(Double.parseDouble(message.split("\\s+")[1]));
@@ -145,6 +145,13 @@ public class Game {
                     err.setColor(Color.red);
                     err.setTitle("Incorrect syntax. Please use bet <amount>.");
                     responder.getPoker().sendMessage(err.build()).queue();
+                }
+            } else {
+                try {
+                    double bet = Double.parseDouble(message);
+                    activeRound.turn().bet(bet);
+                } catch(Exception e) {
+                    //ignore
                 }
             }
         }

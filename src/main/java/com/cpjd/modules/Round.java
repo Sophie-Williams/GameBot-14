@@ -55,6 +55,12 @@ class Round {
 
     private int elapsedTurns;
 
+    /*
+     * This marks the "elapsedTurns" that occurs when all players are folded but one,
+     * the last player will be given one turn, and then the round will be ended
+     */
+    private boolean turnExpire;
+
     /**
      * The index of the player that began the betting cycle
      */
@@ -417,15 +423,27 @@ class Round {
                 break;
             }
         }
-        if(allAllin) {
-            // Ensure that all cards have been drawn
-            while(drawn.size() != 5) {
-                drawn.add(deck.remove(0));
-            }
 
-            responder.postDrawn(drawn);
+        if(allAllin || turnExpire) {
+            // Ensure that all cards have been drawn
+            if(drawn.size() != 5) {
+                while(drawn.size() != 5) {
+                    drawn.add(deck.remove(0));
+                }
+                responder.postDrawn(drawn);
+            }
             end(false);
             return;
+        }
+
+        // check for turn expire
+        int allInPlayers = 0;
+        for(Player p : players) {
+            if(p.isFolded()) allInPlayers++;
+        }
+
+        if(allInPlayers == players.size() - 1 && !turnExpire) {
+            turnExpire = true;
         }
 
         // check if the next betting phase begins, this will happen when:
