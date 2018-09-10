@@ -424,7 +424,7 @@ class Round {
             }
         }
 
-        if(allAllin || turnExpire) {
+        if(allAllin && turnExpire) {
             // Ensure that all cards have been drawn
             if(drawn.size() != 5) {
                 while(drawn.size() != 5) {
